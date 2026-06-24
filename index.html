@@ -75,6 +75,7 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
 <h3>字卡管理</h3><br>
 <button onclick="addGroup()">新增分组</button>
 <button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
+<button onclick="exportJSON()">导出JSON文件</button>
 <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
 
 <div id="groups"></div>
@@ -183,7 +184,7 @@ saveAll();
 renderGroups();
 }
 
-// 导入 JSON 处理
+// 导入 JSON 处理（兼容复杂备份格式和纯数组格式）
 function importJSON(e) {
     let file = e.target.files[0];
     if (!file) return;
@@ -192,38 +193,85 @@ function importJSON(e) {
     reader.onload = function(event) {
         try {
             let importedData = JSON.parse(event.target.result);
-            if (!Array.isArray(importedData)) {
-                alert("导入失败：JSON 格式不正确，应该是一个分组数组。");
+            let targetGroups = [];
+
+            if (importedData && Array.isArray(importedData.customReplyGroups)) {
+                targetGroups = importedData.customReplyGroups;
+            } 
+            else if (Array.isArray(importedData)) {
+                targetGroups = importedData;
+            } else {
+                alert("导入失败：未在文件中找到有效的字卡分组数据。");
                 return;
             }
             
-            importedData.forEach(item => {
-                if (item.name && Array.isArray(item.cards)) {
-                    let existingGroup = groups.find(g => g.name === item.name);
+            let addedCount = 0;
+
+            targetGroups.forEach(item => {
+                let incomingCards = item.cards || item.items;
+                let groupName = item.name;
+
+                if (groupName && Array.isArray(incomingCards)) {
+                    let existingGroup = groups.find(g => g.name === groupName);
                     if (existingGroup) {
-                        // 合并并去重
-                        let mergedCards = [...new Set([...existingGroup.cards, ...item.cards])];
+                        let mergedCards = [...new Set([...existingGroup.cards, ...incomingCards])];
                         existingGroup.cards = mergedCards;
                     } else {
-                        // 新增分组
                         groups.push({
                             id: Date.now() + Math.random(),
-                            name: item.name,
-                            cards: item.cards
+                            name: groupName,
+                            cards: incomingCards
                         });
                     }
+                    addedCount++;
                 }
             });
             
-            saveAll();
-            renderGroups();
-            alert("导入成功！");
+            if(addedCount > 0) {
+                saveAll();
+                renderGroups();
+                alert(`成功导入并合并了 ${addedCount} 个字卡分组！`);
+            } else {
+                alert("未在文件中匹配到任何符合规范的分组数据。");
+            }
+            
         } catch (err) {
-            alert("解析 JSON 文件失败，请检查文件格式。");
+            console.error(err);
+            alert("解析 JSON 文件失败，请检查文件是否损坏。");
         }
         e.target.value = '';
     };
     reader.readAsText(file);
+}
+
+// ✨ 新增：导出字卡为 JSON 文件函数
+function exportJSON() {
+    if (!groups || groups.length === 0) {
+        alert("当前没有可以导出的字卡数据。");
+        return;
+    }
+    try {
+        // 将当前内存里的 groups 转化为格式化好的 JSON 文本
+        let dataStr = JSON.stringify(groups, null, 4);
+        // 创建 Blob 对象
+        let blob = new Blob([dataStr], { type: "application/json" });
+        // 创建下载链接
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        
+        // 生成包含当前日期的文件名，如 word_cards_2026-05-12.json
+        let dateStr = new Date().toISOString().split('T')[0];
+        a.href = url;
+        a.download = `word_cards_${dateStr}.json`;
+        
+        // 模拟点击下载并移除临时节点
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert("导出 JSON 文件失败：" + err.message);
+    }
 }
 
 function sendMe(){
