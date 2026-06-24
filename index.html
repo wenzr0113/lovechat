@@ -5,77 +5,124 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>情侣聊天-系统版</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* 头部样式 */
 .header{height:56px;background:#f7f7f7;display:flex;justify-content:space-between;align-items:center;padding:0 15px;border-bottom:1px solid #ddd;flex-shrink:0}
-.chat{flex:1;overflow-y:auto;padding:10px}
-.msg{display:flex;gap:8px;margin:12px 0;align-items:flex-start}
-.right{justify-content:flex-end}
-.avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#ccc}
-.bubble{max-width:65%;padding:10px 12px;border-radius:10px;background:#fff;word-break:break-all;line-height:1.4;font-size:16px}
-.right .bubble{background:#95ec69}
+.header .menu-btn{font-size:20px;cursor:pointer;user-select:none;padding:5px}
 
-/* 消息中的图片样式 */
-.msg-img{max-width:150px;max-height:150px;border-radius:8px;object-fit:cover}
+/* 聊天滚动区 */
+.chat{flex:1;overflow-y:auto;padding:15px 12px;background:#ededed}
 
-/* ✨ 微信样式底部发送栏重构 */
+/* ✨ 微信原生消息流排版 */
+.msg{display:flex;margin-bottom:16px;align-items:flex-start;position:relative}
+.msg.right{flex-direction:row-reverse}
+
+/* 头像微调：微信标准 40x40 略带小圆角 */
+.avatar{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#ccc;flex-shrink:0}
+.avatar:not([src]), .avatar[src=""] { opacity: 0; }
+
+/* 消息主体容器 */
+.msg-body{display:flex;flex-direction:column;max-width:calc(100% - 100px);margin-left:12px;margin-right:12px}
+.msg.right .msg-body{align-items:flex-end}
+
+/* 昵称样式微调 */
+.small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
+
+/* ✨ 完美还原微信气泡：4px微圆角、自适应大小、原生小尖尖 */
+.bubble{
+    padding: 10px 12px;
+    border-radius: 4px;
+    background: #fff;
+    color: #000;
+    word-break: break-all;
+    line-break: anywhere;
+    line-height: 1.4;
+    font-size: 15px;
+    position: relative;
+    box-shadow: none;
+    display: inline-block;
+    width: fit-content;
+}
+/* 对方气泡的左侧小尖尖 */
+.msg:not(.right) .bubble::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid #fff;
+}
+
+/* 自己气泡的绿色与右侧小尖尖 */
+.msg.right .bubble{background:#95ec69}
+.msg.right .bubble::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    right: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid #95ec69;
+}
+
+/* 消息中的大图/表情包样式（去掉气泡框，直接干净显示） */
+.msg-img{max-width:160px;max-height:160px;border-radius:4px;object-fit:cover;display:block}
+
+/* 微信底部发送大容器 */
 .footer-container{background:#f7f7f7;border-top:1px solid #dddddd;flex-shrink:0;display:flex;flex-direction:column}
 .footer{padding:8px 10px;display:flex;align-items:flex-end;gap:8px}
 
 /* 微信的多行自适应文本框 */
 .footer textarea{flex:1;height:38px;min-height:38px;max-height:100px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
 
-/* 微信风格按钮封装 */
+/* 微信风格圆形按钮 */
 .footer-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid #555;background:transparent;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;padding:0;margin:0;transition:all 0.1s;user-select:none}
 .footer-btn:active{opacity:0.6}
 .send-btn-wechat{width:60px;height:38px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .send-btn-wechat:active{background:#06ad56}
 
-/* ✨ 新增：功能面板大容器 */
-.panel-box{height:0;overflow:hidden;background:#f7f7f7;border-top:0 solid #ddd;transition:height 0.2s ease}
-.panel-box.show{height:110px;border-top:1px solid #ddd}
+/* 功能面板区 */
+.panel-box{height:0;overflow:hidden;background:#f7f7f7;border-top:0 solid #ddd;transition:height 0.15s ease}
+.panel-box.show{height:115px;border-top:1px solid #ddd}
 
-/* ✨ 加号拓展面板内部布局 */
-.plus-panel{display:flex;gap:20px;padding:15px 20px}
-.panel-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#666}
-.panel-icon{width:50px;height:50px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid #eee}
+.plus-panel{display:flex;gap:20px;padding:15px 20px;overflow-x:auto}
+.panel-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#666;flex-shrink:0}
+.panel-icon{width:52px;height:52px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(0,0,0,0.05)}
 .panel-icon:active{background:#eaeaea}
 
-/* ✨ 表情包面板内部布局 */
 .emoji-panel{padding:10px;display:flex;gap:12px;overflow-x:auto;white-space:nowrap;height:100%;align-items:center}
-.emoji-item{width:65px;height:65px;border-radius:6px;object-fit:cover;cursor:pointer;background:#eee;flex-shrink:0;display:inline-block}
-.add-emoji-btn{width:65px;height:65px;border-radius:6px;border:2px dashed #bbb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;color:#999;cursor:pointer;flex-shrink:0}
+.emoji-item{width:65px;height:65px;border-radius:4px;object-fit:cover;cursor:pointer;background:#eee;flex-shrink:0;display:inline-block}
+.add-emoji-btn{width:65px;height:65px;border-radius:4px;border:2px dashed #bbb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;color:#999;cursor:pointer;flex-shrink:0;user-select:none}
 
-/* 系统级页面公用样式 */
-button{cursor:pointer; padding: 4px 8px; margin: 2px;}
-.drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10}
+/* 系统管理页面 */
+.drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10;box-shadow:-2px 0 8px rgba(0,0,0,0.1)}
 .drawer.show{right:0}
-.item{padding:16px;border-bottom:1px solid #eee}
+.item{padding:16px;border-bottom:1px solid #eee;cursor:pointer}
 .page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
 .page.show{left:0}
-.phead{background:#07c160;color:#fff;height:50px;display:flex;align-items:center;padding:0 10px;position:relative}
-.back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;padding:8px;border-radius:4px;user-select:none;font-weight:500}
-.back-btn:active{background:rgba(255,255,255,0.2)}
-.card{background:#fff;margin:10px;padding:12px;border-radius:8px}
+.phead{background:#f7f7f7;color:#333;padding:15px;font-weight:bold;border-bottom:1px solid #ddd;cursor:pointer}
 
-/* 分组与滑动框样式 */
-.group{border:1px solid #ddd;margin:8px 0;border-radius:6px;overflow:hidden;background:#fff}
-.group-header{background:#f9f9f9;padding:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
-.group-title{font-weight:bold;display:flex;align-items:center;gap:6px}
-.group-arrow{transition: transform 0.2s;font-size:12px;color:#999}
-.group.open .group-arrow{transform: rotate(90deg)}
-.group-content{display:none;padding:8px;border-top:1px solid #eee}
-.group.open .group-content{display:block}
-.card-list{max-height:180px;overflow-y:auto;margin-top:6px;padding-right:4px}
-.card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f5f5f5}
-.small{font-size:12px;color:#666}
+.group{border:1px solid #ddd;margin:10px 0;border-radius:6px;background:#fff;overflow:hidden}
+.group-title{background:#f9f9f9;padding:10px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
+.group-cards{padding:5px 10px}
+.group-card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eee}
+
+button{cursor:pointer;padding:4px 8px;border:1px solid #ccc;background:#fff;border-radius:4px}
+input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100%;max-width:260px}
 </style>
 </head>
 <body>
 
 <div class="header">
 <div id="partnerTitle">对方</div>
-<div onclick="menu()">☰</div>
+<div class="menu-btn" onclick="menu()">☰</div>
 </div>
 
 <div class="chat" id="chat"></div>
@@ -83,9 +130,7 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
 <div class="footer-container">
     <div class="footer">
         <button class="footer-btn" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
-        
         <textarea id="txt" placeholder="" rows="1" oninput="handleInput(this)" onclick="closeAllPanels()"></textarea>
-        
         <button class="footer-btn" id="plusToggleBtn" onclick="togglePanel('plus')">+</button>
         <button class="send-btn-wechat" id="sendBtn" onclick="sendMe()">发送</button>
     </div>
@@ -94,7 +139,7 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
         <div class="plus-panel" id="plusPanel" style="display:none;">
             <div class="panel-item" onclick="openCards()">
                 <div class="panel-icon">🃏</div>
-                <div>字卡</div>
+                <div>字卡回复</div>
             </div>
             <div class="panel-item" onclick="document.getElementById('chatImageInput').click()">
                 <div class="panel-icon">🖼️</div>
@@ -102,11 +147,11 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
             </div>
             <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
             
-            <div class="panel-item" onclick="alert('语音通话功能开发中...')">
+            <div class="panel-item" onclick="alert('语音通话功能正在接入中...')">
                 <div class="panel-icon">📞</div>
                 <div>语音通话</div>
             </div>
-            <div class="panel-item" onclick="alert('视频通话功能开发中...')">
+            <div class="panel-item" onclick="alert('视频通话功能正在接入中...')">
                 <div class="panel-icon">📹</div>
                 <div>视频通话</div>
             </div>
@@ -121,54 +166,37 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
 </div>
 
 <div class="drawer" id="drawer">
-<div class="item" onclick="openSystem()">⚙️ 系统</div>
-<div class="item">💌 书信（待开发）</div>
-<div class="item">📍 查岗（待开发）</div>
+<div class="item" onclick="openSystem()">⚙️ 系统设置</div>
+<div class="item" onclick="alert('功能开发中...')">💌 书信</div>
+<div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
 <div class="page" id="systemPage">
-<div class="phead">
-    <div class="back-btn" onclick="closeSystem()">← 系统</div>
-</div>
-
+<div class="phead" onclick="closeSystem()">← 系统</div>
 <div class="card">
 <h3>修改头像昵称</h3><br>
 <div>我的头像</div>
 <img id="meAvatarPreview" class="avatar"><br><br>
 <input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br><br>
-
 <div>我的昵称</div>
-<input id="meName"><br><br>
-
+<input type="text" id="meName"><br><br>
 <div>对方头像</div>
 <img id="partnerAvatarPreview" class="avatar"><br><br>
 <input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br><br>
-
 <div>对方昵称</div>
-<input id="partnerName"><br><br>
-
+<input type="text" id="partnerName"><br><br>
 <button onclick="saveProfile()">保存资料</button>
 </div>
-
 <div class="card">
 <h3>字卡管理</h3><br>
 <button onclick="addGroup()">新增分组</button>
-<button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
-<button onclick="exportJSON()">导出JSON文件</button>
-<input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
-
 <div id="groups"></div>
 </div>
-
-<div class="card">
-<button onclick="closeSystem()">返回聊天</button>
-</div>
+<div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
 <div class="page" id="cardPage">
-<div class="phead">
-    <div class="back-btn" onclick="closeCards()">← 对方字卡回复</div>
-</div>
+<div class="phead" onclick="closeCards()">← 对方字卡回复</div>
 <div id="cardArea"></div>
 <div class="card"><button onclick="closeCards()">关闭</button></div>
 </div>
@@ -176,10 +204,8 @@ button{cursor:pointer; padding: 4px 8px; margin: 2px;}
 <script>
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
-// 表情包从 localStorage 读取，让双方都可以用
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
-let openGroupIds=[];
-let currentActivePanel = null; // 记录当前打开的是 'plus' 还是 'emoji'
+let currentActivePanel = null;
 
 function saveAll(){
 localStorage.setItem("profile",JSON.stringify(profile));
@@ -207,7 +233,6 @@ function renderProfile(){
 meName.value=profile.me.name;
 partnerName.value=profile.partner.name;
 partnerTitle.innerText=profile.partner.name;
-
 if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
 if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
 }
@@ -233,47 +258,24 @@ systemPage.classList.remove('show');
 function addGroup(){
 let n=prompt("分组名称");
 if(!n)return;
-let newId = Date.now();
-groups.push({id:newId,name:n,cards:[]});
-openGroupIds.push(newId);
+groups.push({id:Date.now(),name:n,cards:[]});
 saveAll();
 renderGroups();
-}
-
-function toggleGroup(id){
-    let idx = openGroupIds.indexOf(id);
-    if(idx > -1){
-        openGroupIds.splice(idx, 1);
-    } else {
-        openGroupIds.push(id);
-    }
-    renderGroups();
 }
 
 function renderGroups(){
 let html='';
 groups.forEach(g=>{
-let isOpen = openGroupIds.includes(g.id) ? 'open' : '';
 html+=`
-<div class="group ${isOpen}">
-<div class="group-header" onclick="toggleGroup(${g.id})">
-    <span class="group-title"><span class="group-arrow">▶</span> ${g.name} (${g.cards.length})</span>
-    <button onclick="event.stopPropagation();addCard(${g.id})">+字卡</button>
-</div>
-<div class="group-content">
-    <div class="card-list">
-    ${g.cards.map((c,i)=>`
-    <div class="card-item">
-        <span>${c}</span>
-        <button onclick="delCard(${g.id},${i})">删除</button>
-    </div>`).join('')}
-    ${g.cards.length === 0 ? '<div class="small" style="text-align:center;color:#999;padding:10px 0;">暂无字卡，点击右上方可添加</div>':''}
-    </div>
+<div class="group">
+<div class="group-title"><span>${g.name}</span><button onclick="addCard(${g.id})">+字卡</button></div>
+<div class="group-cards">
+${g.cards.map((c,i)=>`
+<div class="group-card-item"><span>${c}</span><button onclick="delCard(${g.id},${i})">删除</button></div>`).join('')}
 </div>
 </div>`;
 });
-groupsEl=document.getElementById('groups');
-groupsEl.innerHTML=html;
+document.getElementById('groups').innerHTML=html;
 }
 
 function addCard(id){
@@ -290,55 +292,13 @@ saveAll();
 renderGroups();
 }
 
-// 导入与导出 JSON 略（保留逻辑）
-function importJSON(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            let importedData = JSON.parse(event.target.result);
-            let targetGroups = [];
-            if (importedData && Array.isArray(importedData.customReplyGroups)) targetGroups = importedData.customReplyGroups;
-            else if (Array.isArray(importedData)) targetGroups = importedData;
-            else { alert("导入失败"); return; }
-            targetGroups.forEach(item => {
-                let incomingCards = item.cards || item.items;
-                let groupName = item.name;
-                if (groupName && Array.isArray(incomingCards)) {
-                    let existingGroup = groups.find(g => g.name === groupName);
-                    if (existingGroup) { existingGroup.cards = [...new Set([...existingGroup.cards, ...incomingCards])]; }
-                    else { groups.push({ id: Date.now() + Math.random(), name: groupName, cards: incomingCards }); }
-                }
-            });
-            saveAll(); renderGroups(); alert("导入成功！");
-        } catch (err) { alert("解析失败"); }
-        e.target.value = '';
-    };
-    reader.readAsText(file);
-}
-
-function exportJSON() {
-    if (!groups || groups.length === 0) return;
-    let dataStr = JSON.stringify(groups, null, 4);
-    let blob = new Blob([dataStr], { type: "application/json" });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement("a");
-    a.href = url; a.download = `word_cards_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
-
-/* ✨ 微信核心控制逻辑：面板切换 */
 function togglePanel(type) {
     let box = document.getElementById('panelBox');
     let plus = document.getElementById('plusPanel');
     let emoji = document.getElementById('emojiPanel');
-
     if (currentActivePanel === type) {
-        // 如果点的是当前打开的，就关闭它
         closeAllPanels();
     } else {
-        // 打开对应的面板
         box.classList.add('show');
         if (type === 'plus') {
             plus.style.display = 'flex';
@@ -346,9 +306,10 @@ function togglePanel(type) {
         } else {
             plus.style.display = 'none';
             emoji.style.display = 'flex';
-            renderEmojis(); // 展开表情时顺便渲染一下
+            renderEmojis();
         }
         currentActivePanel = type;
+        setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 150);
     }
 }
 
@@ -357,12 +318,10 @@ function closeAllPanels() {
     currentActivePanel = null;
 }
 
-// 输入框自适应及按钮智能切换
 function handleInput(el) {
     el.style.height = '38px'; 
     let nextHeight = el.scrollHeight;
     if(nextHeight > 38) el.style.height = Math.min(nextHeight, 100) + 'px';
-    
     if(el.value.trim().length > 0) {
         plusToggleBtn.style.display = 'none';
         sendBtn.style.display = 'flex';
@@ -372,29 +331,26 @@ function handleInput(el) {
     }
 }
 
-// ✨ 表情包管理：从手机本地添加自定义表情
 function addCustomEmoji(e) {
     let file = e.target.files[0];
     if (!file) return;
     let reader = new FileReader();
     reader.onload = function(event) {
-        customEmojis.push(event.target.result); // 转换为 Base64 存储
+        customEmojis.push(event.target.result);
         saveAll();
         renderEmojis();
     }
     reader.readAsDataURL(file);
-    e.target.value = ''; // 重置
+    e.target.value = '';
 }
 
-// 渲染表情列表
 function renderEmojis() {
     let html = customEmojis.map((imgSrc, index) => `
-        <img class="emoji-item" src="${imgSrc}" onclick="sendEmoji('${index}')" oncontextmenu="event.preventDefault();deleteEmoji(${index})">
+        <img class="emoji-item" src="${imgSrc}" onclick="sendEmoji(${index})" oncontextmenu="event.preventDefault();deleteEmoji(${index})">
     `).join('');
     document.getElementById('emojiList').innerHTML = html;
 }
 
-// 右键/长按可删除不需要的表情包
 function deleteEmoji(index) {
     if(confirm("确定要删除这个表情包吗？")) {
         customEmojis.splice(index, 1);
@@ -403,14 +359,12 @@ function deleteEmoji(index) {
     }
 }
 
-// 发送自定义表情包到聊天框
 function sendEmoji(index) {
     let imgSrc = customEmojis[index];
     addMsg("me", `<img class="msg-img" src="${imgSrc}">`, true);
     closeAllPanels();
 }
 
-// 从照片功能里直接发送普通聊天图片
 function sendImage(e) {
     let file = e.target.files[0];
     if (!file) return;
@@ -426,35 +380,34 @@ function sendImage(e) {
 function sendMe(){
 let t=txt.value.trim();
 if(!t)return;
-addMsg("me", t, false);
+addMsg("me",t);
 txt.value="";
 txt.style.height = '38px';
 plusToggleBtn.style.display = 'flex';
 sendBtn.style.display = 'none';
 }
 
-// 稍微扩展一下原本的渲染函数，以支持富文本 HTML（用于显示图片和表情）
-function addMsg(side, text, isHtml = false){
+/* ✨ 重构后的原生微信消息渲染 */
+function addMsg(side,text,isHtml=false){
 let d=document.createElement("div");
 d.className="msg "+(side==="me"?"right":"");
 let av=side==="me"?profile.me.avatar:profile.partner.avatar;
 let name=side==="me"?profile.me.name:profile.partner.name;
 
-let contentHtml = isHtml ? text : `<div class="bubble">${text}</div>`;
-if(isHtml && text.indexOf('bubble') === -1 && text.indexOf('img') === -1) {
-    contentHtml = `<div class="bubble">${text}</div>`;
-} else if (isHtml && text.indexOf('img') > -1) {
-    // 图片不需要加白底的气泡框，直接显示更逼真
+// 判断如果是图片或表情，则不需要外层包裹白底/绿底的气泡样式，直接裸露显示
+let contentHtml = "";
+if(isHtml && text.indexOf('img') > -1) {
     contentHtml = text;
+} else {
+    contentHtml = `<div class="bubble">${text}</div>`;
 }
 
 d.innerHTML=`
-${side==="other"?'<img class="avatar" src="'+(av||'')+'">':''}
-<div>
-<div class="small" style="margin-bottom:2px; text-align:${side==='me'?'right':'left'}">${name}</div>
-${contentHtml}
+<img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
+<div class="msg-body">
+    <div class="small" style="text-align:${side==='me'?'right':'left'}">${name}</div>
+    ${contentHtml}
 </div>
-${side==="me"?'<img class="avatar" src="'+(av||'')+'">':''}
 `;
 chat.appendChild(d);
 chat.scrollTop=chat.scrollHeight;
@@ -465,22 +418,17 @@ cardPage.classList.add('show');
 closeAllPanels();
 let html='';
 groups.forEach(g=>{
-html+=`<div class="card">
-    <h3>${g.name} (${g.cards.length})</h3>
-    <div style="max-height: 150px; overflow-y: auto; margin-top:6px;">`;
-    g.cards.forEach(c=>{
-        html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
-    });
-    if(g.cards.length===0){
-        html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
-    }
-html+='</div></div>';
+html+=`<div class="card"><h3>${g.name}</h3>`;
+g.cards.forEach(c=>{
+html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
 });
-cardArea.innerHTML = html || '<div class="card" style="text-align:center;color:#999;">请先去系统设置里导入或创建字卡分组</div>';
+html+='</div>';
+});
+cardArea.innerHTML=html;
 }
 
 function sendCard(t){
-addMsg("other", t, false);
+addMsg("other",t);
 closeCards();
 }
 
@@ -488,7 +436,6 @@ function closeCards(){
 cardPage.classList.remove('show');
 }
 
-// 支持回车发送
 document.getElementById('txt').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
