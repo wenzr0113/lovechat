@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊天系统</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Microsoft YaHei",sans-serif;
+}
+
+body{
+    background:#ededed;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* 主界面 */
+.page{
+    width:100%;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+/* 顶部 */
+.header{
+    height:55px;
+    background:#f7f7f7;
+    border-bottom:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 15px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.menu-btn{
+    font-size:24px;
+    cursor:pointer;
+}
+
+/* 聊天区域 */
+.chat-body{
+    flex:1;
+    overflow-y:auto;
+    padding:15px;
+}
+
+/* 消息 */
+.message{
+    margin-bottom:15px;
+    display:flex;
+}
+
+.left{
+    justify-content:flex-start;
+}
+
+.right{
+    justify-content:flex-end;
+}
+
+.bubble{
+    max-width:70%;
+    padding:10px 15px;
+    border-radius:12px;
+    line-height:1.5;
+}
+
+.left .bubble{
+    background:white;
+}
+
+.right .bubble{
+    background:#95ec69;
+}
+
+/* 输入栏 */
+.footer{
+    height:60px;
+    background:#f7f7f7;
+    border-top:1px solid #ddd;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:0 10px;
+}
+
+.footer input{
+    flex:1;
+    height:40px;
+    border:none;
+    border-radius:20px;
+    padding:0 15px;
+    outline:none;
+}
+
+.footer button{
+    background:#07c160;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:6px;
+}
+
+/* 遮罩 */
+.overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+    display:none;
+}
+
+/* 侧边菜单 */
+.sidebar{
+    position:fixed;
+    top:0;
+    right:-280px;
+    width:280px;
+    height:100%;
+    background:white;
+    transition:.3s;
+    z-index:100;
+}
+
+.sidebar.active{
+    right:0;
+}
+
+.overlay.active{
+    display:block;
+}
+
+.sidebar-header{
+    height:60px;
+    background:#07c160;
+    color:white;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+}
+
+.menu-item{
+    padding:18px;
+    border-bottom:1px solid #eee;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.menu-item:hover{
+    background:#f5f5f5;
+}
+
+/* 功能页面 */
+.function-page{
+    position:fixed;
+    top:0;
+    left:100%;
+    width:100%;
+    height:100%;
+    background:#f5f5f5;
+    transition:.3s;
+    z-index:200;
+}
+
+.function-page.show{
+    left:0;
+}
+
+.func-header{
+    height:55px;
+    background:#07c160;
+    color:white;
+    display:flex;
+    align-items:center;
+    padding:0 15px;
+    font-size:18px;
+}
+
+.back{
+    margin-right:15px;
+    cursor:pointer;
+}
+
+.func-content{
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    margin-bottom:10px;
+    border-radius:10px;
+}
+</style>
+</head>
+<body>
+
+<!-- 聊天页 -->
+<div class="page">
+
+    <div class="header">
+        <span>小宝贝</span>
+        <span class="menu-btn" onclick="openMenu()">☰</span>
+    </div>
+
+    <div class="chat-body" id="chat">
+
+        <div class="message left">
+            <div class="bubble">早安～</div>
+        </div>
+
+        <div class="message right">
+            <div class="bubble">早安宝宝❤️</div>
+        </div>
+
+        <div class="message left">
+            <div class="bubble">今天忙吗？</div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <input id="msg" placeholder="输入消息...">
+        <button onclick="sendMsg()">发送</button>
+    </div>
+
+</div>
+
+<!-- 遮罩 -->
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<!-- 菜单 -->
+<div class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+        功能中心
+    </div>
+
+    <div class="menu-item" onclick="showPage('letter')">
+        💌 书信
+    </div>
+
+    <div class="menu-item" onclick="showPage('system')">
+        ⚙️ 系统
+    </div>
+
+    <div class="menu-item" onclick="showPage('moments')">
+        🌏 朋友圈
+    </div>
+
+    <div class="menu-item" onclick="showPage('check')">
+        📍 查岗
+    </div>
+
+</div>
+
+<!-- 书信 -->
+<div class="function-page" id="letter">
+
+    <div class="func-header">
+        <span class="back" onclick="closePage('letter')">←</span>
+        书信
+    </div>
+
+    <div class="func-content">
+        <div class="card">写一封新的书信</div>
+        <div class="card">查看历史书信</div>
+        <div class="card">纪念日信箱</div>
+    </div>
+
+</div>
+
+<!-- 系统 -->
+<div class="function-page" id="system">
+
+    <div class="func-header">
+        <span class="back" onclick="closePage('system')">←</span>
+        系统
+    </div>
+
+    <div class="func-content">
+        <div class="card">修改昵称</div>
+        <div class="card">修改头像</div>
+        <div class="card">主题设置</div>
+        <div class="card">通知设置</div>
+    </div>
+
+</div>
+
+<!-- 朋友圈 -->
+<div class="function-page" id="moments">
+
+    <div class="func-header">
+        <span class="back" onclick="closePage('moments')">←</span>
+        朋友圈
+    </div>
+
+    <div class="func-content">
+        <div class="card">
+            🌸 今天心情很好～
+        </div>
+
+        <div class="card">
+            ☕ 下午喝了咖啡
+        </div>
+
+        <div class="card">
+            🌙 晚安啦
+        </div>
+    </div>
+
+</div>
+
+<!-- 查岗 -->
+<div class="function-page" id="check">
+
+    <div class="func-header">
+        <span class="back" onclick="closePage('check')">←</span>
+        查岗
+    </div>
+
+    <div class="func-content">
+        <div class="card">
+            在线状态：在线
+        </div>
+
+        <div class="card">
+            电量：86%
+        </div>
+
+        <div class="card">
+            最近活跃：刚刚
+        </div>
+    </div>
+
+</div>
+
+<script>
+function sendMsg(){
+
+    let input=document.getElementById("msg");
+
+    if(input.value.trim()==""){
+        return;
+    }
+
+    let chat=document.getElementById("chat");
+
+    chat.innerHTML+=`
+        <div class="message right">
+            <div class="bubble">${input.value}</div>
+        </div>
+    `;
+
+    input.value="";
+
+    chat.scrollTop=chat.scrollHeight;
+}
+
+function openMenu(){
+    document.getElementById("sidebar").classList.add("active");
+    document.getElementById("overlay").classList.add("active");
+}
+
+function closeMenu(){
+    document.getElementById("sidebar").classList.remove("active");
+    document.getElementById("overlay").classList.remove("active");
+}
+
+function showPage(id){
+    document.getElementById(id).classList.add("show");
+    closeMenu();
+}
+
+function closePage(id){
+    document.getElementById(id).classList.remove("show");
+}
+</script>
+
+</body>
+</html>
