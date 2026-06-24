@@ -15,11 +15,11 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 聊天滚动区 */
 .chat{flex:1;overflow-y:auto;padding:15px 12px;background:#ededed}
 
-/* ✨ 微信原生消息流排版 */
-.msg{display:flex;margin-bottom:16px;align-items:flex-start;position:relative}
+/* 微信原生消息流排版 */
+.msg{display:flex;margin-bottom:16px;align-items:flex-start}
 .msg.right{flex-direction:row-reverse}
 
-/* 头像微调：微信标准 40x40 略带小圆角 */
+/* 头像：微信标准 40x40 略带小圆角 */
 .avatar{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#ccc;flex-shrink:0}
 .avatar:not([src]), .avatar[src=""] { opacity: 0; }
 
@@ -27,10 +27,10 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .msg-body{display:flex;flex-direction:column;max-width:calc(100% - 100px);margin-left:12px;margin-right:12px}
 .msg.right .msg-body{align-items:flex-end}
 
-/* 昵称样式微调 */
+/* 昵称样式 */
 .small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
 
-/* ✨ 完美还原微信气泡：4px微圆角、自适应大小、原生小尖尖 */
+/* 完美还原微信气泡：4px微圆角、自适应大小、原生小尖尖 */
 .bubble{
     padding: 10px 12px;
     border-radius: 4px;
@@ -72,20 +72,64 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     border-left: 5px solid #95ec69;
 }
 
-/* 消息中的大图/表情包样式（去掉气泡框，直接干净显示） */
-.msg-img{max-width:160px;max-height:160px;border-radius:4px;object-fit:cover;display:block}
-
 /* 微信底部发送大容器 */
 .footer-container{background:#f7f7f7;border-top:1px solid #dddddd;flex-shrink:0;display:flex;flex-direction:column}
-.footer{padding:8px 10px;display:flex;align-items:flex-end;gap:8px}
+.footer{padding:8px 10px;display:flex;align-items:center;gap:10px;height:54px}
 
-/* 微信的多行自适应文本框 */
-.footer textarea{flex:1;height:38px;min-height:38px;max-height:100px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
+/* 微信的原生文本框 */
+.footer textarea{flex:1;height:38px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
 
-/* 微信风格圆形按钮 */
-.footer-btn{width:38px;height:38px;border-radius:50%;border:1.5px solid #555;background:transparent;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;flex-shrink:0;padding:0;margin:0;transition:all 0.1s;user-select:none}
-.footer-btn:active{opacity:0.6}
-.send-btn-wechat{width:60px;height:38px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:15px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+/* ✨ 极致精修：高仿微信极细圆圈图标，保证大小相宜、绝对居中 */
+.footer-btn{
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1.2px solid #555;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+    user-select: none;
+    outline: none;
+    transition: opacity 0.1s;
+}
+.footer-btn:active{opacity:0.5}
+
+/* 笑脸内嵌样式：微调字体大小与轴线确保居中 */
+.footer-btn.emoji-icon {
+    font-size: 20px;
+    line-height: 1;
+    text-indent: 0;
+}
+
+/* 加号内嵌样式：用纯 CSS 画一个精致的微信极细加号，完美解决字符不居中问题 */
+.footer-btn.plus-icon {
+    position: relative;
+}
+.footer-btn.plus-icon::before,
+.footer-btn.plus-icon::after {
+    content: "";
+    position: absolute;
+    background-color: #555;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.footer-btn.plus-icon::before {
+    width: 14px;
+    height: 1.5px;
+}
+.footer-btn.plus-icon::after {
+    width: 1.5px;
+    height: 14px;
+}
+
+/* 微信风格发送按钮 */
+.send-btn-wechat{width:60px;height:34px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .send-btn-wechat:active{background:#06ad56}
 
 /* 功能面板区 */
@@ -101,19 +145,24 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .emoji-item{width:65px;height:65px;border-radius:4px;object-fit:cover;cursor:pointer;background:#eee;flex-shrink:0;display:inline-block}
 .add-emoji-btn{width:65px;height:65px;border-radius:4px;border:2px dashed #bbb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;color:#999;cursor:pointer;flex-shrink:0;user-select:none}
 
-/* 系统管理页面 */
+/* 系统管理及弹窗样式 */
 .drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10;box-shadow:-2px 0 8px rgba(0,0,0,0.1)}
 .drawer.show{right:0}
 .item{padding:16px;border-bottom:1px solid #eee;cursor:pointer}
 .page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
 .page.show{left:0}
-.phead{background:#f7f7f7;color:#333;padding:15px;font-weight:bold;border-bottom:1px solid #ddd;cursor:pointer}
-
+.phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
+.back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;padding:8px;border-radius:4px;user-select:none}
+.card{background:#fff;margin:10px;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
 .group{border:1px solid #ddd;margin:10px 0;border-radius:6px;background:#fff;overflow:hidden}
-.group-title{background:#f9f9f9;padding:10px;font-weight:bold;display:flex;justify-content:space-between;align-items:center}
-.group-cards{padding:5px 10px}
-.group-card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eee}
-
+.group-header{background:#f9f9f9;padding:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.group-title{font-weight:bold;display:flex;align-items:center;gap:6px}
+.group-arrow{transition: transform 0.2s;font-size:12px;color:#999}
+.group.open .group-arrow{transform: rotate(90deg)}
+.group-content{display:none;padding:8px;border-top:1px solid #eee}
+.group.open .group-content{display:block}
+.card-list{max-height:180px;overflow-y:auto;margin-top:6px}
+.card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f5f5f5}
 button{cursor:pointer;padding:4px 8px;border:1px solid #ccc;background:#fff;border-radius:4px}
 input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100%;max-width:260px}
 </style>
@@ -129,9 +178,9 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 
 <div class="footer-container">
     <div class="footer">
-        <button class="footer-btn" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
+        <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
         <textarea id="txt" placeholder="" rows="1" oninput="handleInput(this)" onclick="closeAllPanels()"></textarea>
-        <button class="footer-btn" id="plusToggleBtn" onclick="togglePanel('plus')">+</button>
+        <button class="footer-btn plus-icon" id="plusToggleBtn" onclick="togglePanel('plus')"></button>
         <button class="send-btn-wechat" id="sendBtn" onclick="sendMe()">发送</button>
     </div>
 
@@ -146,7 +195,6 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
                 <div>照片</div>
             </div>
             <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
-            
             <div class="panel-item" onclick="alert('语音通话功能正在接入中...')">
                 <div class="panel-icon">📞</div>
                 <div>语音通话</div>
@@ -172,7 +220,7 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 </div>
 
 <div class="page" id="systemPage">
-<div class="phead" onclick="closeSystem()">← 系统</div>
+<div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统</div></div>
 <div class="card">
 <h3>修改头像昵称</h3><br>
 <div>我的头像</div>
@@ -187,16 +235,20 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 <input type="text" id="partnerName"><br><br>
 <button onclick="saveProfile()">保存资料</button>
 </div>
+
 <div class="card">
 <h3>字卡管理</h3><br>
 <button onclick="addGroup()">新增分组</button>
+<button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
+<button onclick="exportJSON()">导出JSON文件</button>
+<input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
 <div id="groups"></div>
 </div>
 <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
 <div class="page" id="cardPage">
-<div class="phead" onclick="closeCards()">← 对方字卡回复</div>
+<div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
 <div id="cardArea"></div>
 <div class="card"><button onclick="closeCards()">关闭</button></div>
 </div>
@@ -205,6 +257,7 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
+let openGroupIds=[];
 let currentActivePanel = null;
 
 function saveAll(){
@@ -258,20 +311,39 @@ systemPage.classList.remove('show');
 function addGroup(){
 let n=prompt("分组名称");
 if(!n)return;
-groups.push({id:Date.now(),name:n,cards:[]});
+let newId = Date.now();
+groups.push({id:newId,name:n,cards:[]});
+openGroupIds.push(newId);
 saveAll();
 renderGroups();
+}
+
+function toggleGroup(id){
+    let idx = openGroupIds.indexOf(id);
+    if(idx > -1){ openGroupIds.splice(idx, 1); } 
+    else { openGroupIds.push(id); }
+    renderGroups();
 }
 
 function renderGroups(){
 let html='';
 groups.forEach(g=>{
+let isOpen = openGroupIds.includes(g.id) ? 'open' : '';
 html+=`
-<div class="group">
-<div class="group-title"><span>${g.name}</span><button onclick="addCard(${g.id})">+字卡</button></div>
-<div class="group-cards">
-${g.cards.map((c,i)=>`
-<div class="group-card-item"><span>${c}</span><button onclick="delCard(${g.id},${i})">删除</button></div>`).join('')}
+<div class="group ${isOpen}">
+<div class="group-header" onclick="toggleGroup(${g.id})">
+    <span class="group-title"><span class="group-arrow">▶</span> ${g.name} (${g.cards.length})</span>
+    <button onclick="event.stopPropagation();addCard(${g.id})">+字卡</button>
+</div>
+<div class="group-content">
+    <div class="card-list">
+    ${g.cards.map((c,i)=>`
+    <div class="card-item">
+        <span>${c}</span>
+        <button onclick="delCard(${g.id},${i})">删除</button>
+    </div>`).join('')}
+    ${g.cards.length === 0 ? '<div class="small" style="text-align:center;color:#999;padding:10px 0;">暂无字卡</div>':''}
+    </div>
 </div>
 </div>`;
 });
@@ -290,6 +362,61 @@ function delCard(id,i){
 groups.find(x=>x.id===id).cards.splice(i,1);
 saveAll();
 renderGroups();
+}
+
+function importJSON(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            let importedData = JSON.parse(event.target.result);
+            let targetGroups = [];
+            if (importedData && Array.isArray(importedData.customReplyGroups)) {
+                targetGroups = importedData.customReplyGroups;
+            } else if (Array.isArray(importedData)) {
+                targetGroups = importedData;
+            } else {
+                alert("导入失败：格式不对。");
+                return;
+            }
+            let addedCount = 0;
+            targetGroups.forEach(item => {
+                let incomingCards = item.cards || item.items;
+                let groupName = item.name;
+                if (groupName && Array.isArray(incomingCards)) {
+                    let existingGroup = groups.find(g => g.name === groupName);
+                    if (existingGroup) {
+                        existingGroup.cards = [...new Set([...existingGroup.cards, ...incomingCards])];
+                    } else {
+                        let newId = Date.now() + Math.random();
+                        groups.push({ id: newId, name: groupName, cards: incomingCards });
+                        openGroupIds.push(newId);
+                    }
+                    addedCount++;
+                }
+            });
+            if(addedCount > 0) {
+                saveAll(); renderGroups();
+                alert(`导入并合并了 ${addedCount} 个分组`);
+            } else { alert("未匹配到分组数据。"); }
+        } catch (err) { alert("解析文件失败。"); }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function exportJSON() {
+    if (!groups || groups.length === 0) { alert("没有数据。"); return; }
+    try {
+        let dataStr = JSON.stringify(groups, null, 4);
+        let blob = new Blob([dataStr], { type: "application/json" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url; a.download = `word_cards.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) { alert("导出失败"); }
 }
 
 function togglePanel(type) {
@@ -319,9 +446,6 @@ function closeAllPanels() {
 }
 
 function handleInput(el) {
-    el.style.height = '38px'; 
-    let nextHeight = el.scrollHeight;
-    if(nextHeight > 38) el.style.height = Math.min(nextHeight, 100) + 'px';
     if(el.value.trim().length > 0) {
         plusToggleBtn.style.display = 'none';
         sendBtn.style.display = 'flex';
@@ -337,8 +461,7 @@ function addCustomEmoji(e) {
     let reader = new FileReader();
     reader.onload = function(event) {
         customEmojis.push(event.target.result);
-        saveAll();
-        renderEmojis();
+        saveAll(); renderEmojis();
     }
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -354,14 +477,13 @@ function renderEmojis() {
 function deleteEmoji(index) {
     if(confirm("确定要删除这个表情包吗？")) {
         customEmojis.splice(index, 1);
-        saveAll();
-        renderEmojis();
+        saveAll(); renderEmojis();
     }
 }
 
 function sendEmoji(index) {
     let imgSrc = customEmojis[index];
-    addMsg("me", `<img class="msg-img" src="${imgSrc}">`, true);
+    addMsg("me", `<img style="max-width:160px;max-height:160px;border-radius:4px" src="${imgSrc}">`, true);
     closeAllPanels();
 }
 
@@ -370,7 +492,7 @@ function sendImage(e) {
     if (!file) return;
     let reader = new FileReader();
     reader.onload = function(event) {
-        addMsg("me", `<img class="msg-img" src="${event.target.result}">`, true);
+        addMsg("me", `<img style="max-width:160px;max-height:160px;border-radius:4px" src="${event.target.result}">`, true);
         closeAllPanels();
     }
     reader.readAsDataURL(file);
@@ -382,25 +504,17 @@ let t=txt.value.trim();
 if(!t)return;
 addMsg("me",t);
 txt.value="";
-txt.style.height = '38px';
 plusToggleBtn.style.display = 'flex';
 sendBtn.style.display = 'none';
 }
 
-/* ✨ 重构后的原生微信消息渲染 */
 function addMsg(side,text,isHtml=false){
 let d=document.createElement("div");
 d.className="msg "+(side==="me"?"right":"");
 let av=side==="me"?profile.me.avatar:profile.partner.avatar;
 let name=side==="me"?profile.me.name:profile.partner.name;
 
-// 判断如果是图片或表情，则不需要外层包裹白底/绿底的气泡样式，直接裸露显示
-let contentHtml = "";
-if(isHtml && text.indexOf('img') > -1) {
-    contentHtml = text;
-} else {
-    contentHtml = `<div class="bubble">${text}</div>`;
-}
+let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
 
 d.innerHTML=`
 <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
@@ -418,13 +532,15 @@ cardPage.classList.add('show');
 closeAllPanels();
 let html='';
 groups.forEach(g=>{
-html+=`<div class="card"><h3>${g.name}</h3>`;
+html+=`<div class="card"><h3>${g.name} (${g.cards.length})</h3>
+<div style="max-height:160px; overflow-y:auto; margin-top:6px;">`;
 g.cards.forEach(c=>{
 html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
 });
-html+='</div>';
+if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">暂无字卡</div>`;
+html+='</div></div>';
 });
-cardArea.innerHTML=html;
+cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先去系统设置</div>';
 }
 
 function sendCard(t){
