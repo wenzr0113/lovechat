@@ -16,7 +16,7 @@ body{background:#ededed;height:100vh}
 .right .bubble{background:#95ec69}
 .footer{height:60px;display:flex;gap:8px;padding:10px;background:#f7f7f7}
 .footer input{flex:1;padding:10px}
-button{cursor:pointer}
+button{cursor:pointer; padding: 4px 8px; margin: 2px;}
 .drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10}
 .drawer.show{right:0}
 .item{padding:16px;border-bottom:1px solid #eee}
@@ -74,6 +74,9 @@ button{cursor:pointer}
 <div class="card">
 <h3>字卡管理</h3><br>
 <button onclick="addGroup()">新增分组</button>
+<button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
+<input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
+
 <div id="groups"></div>
 </div>
 
@@ -178,6 +181,49 @@ function delCard(id,i){
 groups.find(x=>x.id===id).cards.splice(i,1);
 saveAll();
 renderGroups();
+}
+
+// 导入 JSON 处理
+function importJSON(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    
+    let reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            let importedData = JSON.parse(event.target.result);
+            if (!Array.isArray(importedData)) {
+                alert("导入失败：JSON 格式不正确，应该是一个分组数组。");
+                return;
+            }
+            
+            importedData.forEach(item => {
+                if (item.name && Array.isArray(item.cards)) {
+                    let existingGroup = groups.find(g => g.name === item.name);
+                    if (existingGroup) {
+                        // 合并并去重
+                        let mergedCards = [...new Set([...existingGroup.cards, ...item.cards])];
+                        existingGroup.cards = mergedCards;
+                    } else {
+                        // 新增分组
+                        groups.push({
+                            id: Date.now() + Math.random(),
+                            name: item.name,
+                            cards: item.cards
+                        });
+                    }
+                }
+            });
+            
+            saveAll();
+            renderGroups();
+            alert("导入成功！");
+        } catch (err) {
+            alert("解析 JSON 文件失败，请检查文件格式。");
+        }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
 }
 
 function sendMe(){
