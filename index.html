@@ -2,388 +2,231 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>聊天系统</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>情侣聊天-系统版</title>
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:"Microsoft YaHei",sans-serif;
-}
-
-body{
-    background:#ededed;
-    height:100vh;
-    overflow:hidden;
-}
-
-/* 主界面 */
-.page{
-    width:100%;
-    height:100vh;
-    display:flex;
-    flex-direction:column;
-}
-
-/* 顶部 */
-.header{
-    height:55px;
-    background:#f7f7f7;
-    border-bottom:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 15px;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.menu-btn{
-    font-size:24px;
-    cursor:pointer;
-}
-
-/* 聊天区域 */
-.chat-body{
-    flex:1;
-    overflow-y:auto;
-    padding:15px;
-}
-
-/* 消息 */
-.message{
-    margin-bottom:15px;
-    display:flex;
-}
-
-.left{
-    justify-content:flex-start;
-}
-
-.right{
-    justify-content:flex-end;
-}
-
-.bubble{
-    max-width:70%;
-    padding:10px 15px;
-    border-radius:12px;
-    line-height:1.5;
-}
-
-.left .bubble{
-    background:white;
-}
-
-.right .bubble{
-    background:#95ec69;
-}
-
-/* 输入栏 */
-.footer{
-    height:60px;
-    background:#f7f7f7;
-    border-top:1px solid #ddd;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:0 10px;
-}
-
-.footer input{
-    flex:1;
-    height:40px;
-    border:none;
-    border-radius:20px;
-    padding:0 15px;
-    outline:none;
-}
-
-.footer button{
-    background:#07c160;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:6px;
-}
-
-/* 遮罩 */
-.overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.4);
-    display:none;
-}
-
-/* 侧边菜单 */
-.sidebar{
-    position:fixed;
-    top:0;
-    right:-280px;
-    width:280px;
-    height:100%;
-    background:white;
-    transition:.3s;
-    z-index:100;
-}
-
-.sidebar.active{
-    right:0;
-}
-
-.overlay.active{
-    display:block;
-}
-
-.sidebar-header{
-    height:60px;
-    background:#07c160;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:20px;
-}
-
-.menu-item{
-    padding:18px;
-    border-bottom:1px solid #eee;
-    cursor:pointer;
-    font-size:16px;
-}
-
-.menu-item:hover{
-    background:#f5f5f5;
-}
-
-/* 功能页面 */
-.function-page{
-    position:fixed;
-    top:0;
-    left:100%;
-    width:100%;
-    height:100%;
-    background:#f5f5f5;
-    transition:.3s;
-    z-index:200;
-}
-
-.function-page.show{
-    left:0;
-}
-
-.func-header{
-    height:55px;
-    background:#07c160;
-    color:white;
-    display:flex;
-    align-items:center;
-    padding:0 15px;
-    font-size:18px;
-}
-
-.back{
-    margin-right:15px;
-    cursor:pointer;
-}
-
-.func-content{
-    padding:20px;
-}
-
-.card{
-    background:white;
-    padding:15px;
-    margin-bottom:10px;
-    border-radius:10px;
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
+body{background:#ededed;height:100vh}
+.header{height:56px;background:#f7f7f7;display:flex;justify-content:space-between;align-items:center;padding:0 15px;border-bottom:1px solid #ddd}
+.chat{height:calc(100vh - 116px);overflow:auto;padding:10px}
+.msg{display:flex;gap:8px;margin:12px 0;align-items:flex-start}
+.right{justify-content:flex-end}
+.avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#ccc}
+.bubble{max-width:65%;padding:10px 12px;border-radius:10px;background:#fff}
+.right .bubble{background:#95ec69}
+.footer{height:60px;display:flex;gap:8px;padding:10px;background:#f7f7f7}
+.footer input{flex:1;padding:10px}
+button{cursor:pointer}
+.drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10}
+.drawer.show{right:0}
+.item{padding:16px;border-bottom:1px solid #eee}
+.page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
+.page.show{left:0}
+.phead{background:#07c160;color:#fff;padding:15px}
+.card{background:#fff;margin:10px;padding:12px;border-radius:8px}
+.group{border:1px solid #ddd;padding:8px;margin:8px 0}
+.small{font-size:12px;color:#666}
 </style>
 </head>
 <body>
 
-<!-- 聊天页 -->
-<div class="page">
-
-    <div class="header">
-        <span>小宝贝</span>
-        <span class="menu-btn" onclick="openMenu()">☰</span>
-    </div>
-
-    <div class="chat-body" id="chat">
-
-        <div class="message left">
-            <div class="bubble">早安～</div>
-        </div>
-
-        <div class="message right">
-            <div class="bubble">早安宝宝❤️</div>
-        </div>
-
-        <div class="message left">
-            <div class="bubble">今天忙吗？</div>
-        </div>
-
-    </div>
-
-    <div class="footer">
-        <input id="msg" placeholder="输入消息...">
-        <button onclick="sendMsg()">发送</button>
-    </div>
-
+<div class="header">
+<div id="partnerTitle">对方</div>
+<div onclick="menu()">☰</div>
 </div>
 
-<!-- 遮罩 -->
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+<div class="chat" id="chat"></div>
 
-<!-- 菜单 -->
-<div class="sidebar" id="sidebar">
-
-    <div class="sidebar-header">
-        功能中心
-    </div>
-
-    <div class="menu-item" onclick="showPage('letter')">
-        💌 书信
-    </div>
-
-    <div class="menu-item" onclick="showPage('system')">
-        ⚙️ 系统
-    </div>
-
-    <div class="menu-item" onclick="showPage('moments')">
-        🌏 朋友圈
-    </div>
-
-    <div class="menu-item" onclick="showPage('check')">
-        📍 查岗
-    </div>
-
+<div class="footer">
+<input id="txt" placeholder="输入消息">
+<button onclick="sendMe()">发送</button>
+<button onclick="openCards()">🃏</button>
 </div>
 
-<!-- 书信 -->
-<div class="function-page" id="letter">
-
-    <div class="func-header">
-        <span class="back" onclick="closePage('letter')">←</span>
-        书信
-    </div>
-
-    <div class="func-content">
-        <div class="card">写一封新的书信</div>
-        <div class="card">查看历史书信</div>
-        <div class="card">纪念日信箱</div>
-    </div>
-
+<div class="drawer" id="drawer">
+<div class="item" onclick="openSystem()">⚙️ 系统</div>
+<div class="item">💌 书信（待开发）</div>
+<div class="item">📍 查岗（待开发）</div>
 </div>
 
-<!-- 系统 -->
-<div class="function-page" id="system">
+<div class="page" id="systemPage">
+<div class="phead">← 系统</div>
 
-    <div class="func-header">
-        <span class="back" onclick="closePage('system')">←</span>
-        系统
-    </div>
+<div class="card">
+<h3>修改头像昵称</h3><br>
+<div>我的头像</div>
+<img id="meAvatarPreview" class="avatar"><br><br>
+<input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br><br>
 
-    <div class="func-content">
-        <div class="card">修改昵称</div>
-        <div class="card">修改头像</div>
-        <div class="card">主题设置</div>
-        <div class="card">通知设置</div>
-    </div>
+<div>我的昵称</div>
+<input id="meName"><br><br>
 
+<div>对方头像</div>
+<img id="partnerAvatarPreview" class="avatar"><br><br>
+<input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br><br>
+
+<div>对方昵称</div>
+<input id="partnerName"><br><br>
+
+<button onclick="saveProfile()">保存资料</button>
 </div>
 
-<!-- 朋友圈 -->
-<div class="function-page" id="moments">
-
-    <div class="func-header">
-        <span class="back" onclick="closePage('moments')">←</span>
-        朋友圈
-    </div>
-
-    <div class="func-content">
-        <div class="card">
-            🌸 今天心情很好～
-        </div>
-
-        <div class="card">
-            ☕ 下午喝了咖啡
-        </div>
-
-        <div class="card">
-            🌙 晚安啦
-        </div>
-    </div>
-
+<div class="card">
+<h3>字卡管理</h3><br>
+<button onclick="addGroup()">新增分组</button>
+<div id="groups"></div>
 </div>
 
-<!-- 查岗 -->
-<div class="function-page" id="check">
+<div class="card">
+<button onclick="closeSystem()">返回聊天</button>
+</div>
+</div>
 
-    <div class="func-header">
-        <span class="back" onclick="closePage('check')">←</span>
-        查岗
-    </div>
-
-    <div class="func-content">
-        <div class="card">
-            在线状态：在线
-        </div>
-
-        <div class="card">
-            电量：86%
-        </div>
-
-        <div class="card">
-            最近活跃：刚刚
-        </div>
-    </div>
-
+<div class="page" id="cardPage">
+<div class="phead">← 对方字卡回复</div>
+<div id="cardArea"></div>
+<div class="card"><button onclick="closeCards()">关闭</button></div>
 </div>
 
 <script>
-function sendMsg(){
+let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
+let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 
-    let input=document.getElementById("msg");
-
-    if(input.value.trim()==""){
-        return;
-    }
-
-    let chat=document.getElementById("chat");
-
-    chat.innerHTML+=`
-        <div class="message right">
-            <div class="bubble">${input.value}</div>
-        </div>
-    `;
-
-    input.value="";
-
-    chat.scrollTop=chat.scrollHeight;
+function saveAll(){
+localStorage.setItem("profile",JSON.stringify(profile));
+localStorage.setItem("groups",JSON.stringify(groups));
 }
 
-function openMenu(){
-    document.getElementById("sidebar").classList.add("active");
-    document.getElementById("overlay").classList.add("active");
+function menu(){
+document.getElementById('drawer').classList.toggle('show');
 }
 
-function closeMenu(){
-    document.getElementById("sidebar").classList.remove("active");
-    document.getElementById("overlay").classList.remove("active");
+function avatarChange(e,type){
+let f=e.target.files[0];
+if(!f)return;
+let r=new FileReader();
+r.onload=function(){
+profile[type].avatar=r.result;
+renderProfile();
+saveAll();
+}
+r.readAsDataURL(f);
 }
 
-function showPage(id){
-    document.getElementById(id).classList.add("show");
-    closeMenu();
+function renderProfile(){
+meName.value=profile.me.name;
+partnerName.value=profile.partner.name;
+partnerTitle.innerText=profile.partner.name;
+
+if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
+if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
 }
 
-function closePage(id){
-    document.getElementById(id).classList.remove("show");
+function saveProfile(){
+profile.me.name=meName.value;
+profile.partner.name=partnerName.value;
+saveAll();
+renderProfile();
+alert("已保存");
 }
+
+function openSystem(){
+systemPage.classList.add('show');
+drawer.classList.remove('show');
+renderGroups();
+}
+
+function closeSystem(){
+systemPage.classList.remove('show');
+}
+
+function addGroup(){
+let n=prompt("分组名称");
+if(!n)return;
+groups.push({id:Date.now(),name:n,cards:[]});
+saveAll();
+renderGroups();
+}
+
+function renderGroups(){
+let html='';
+groups.forEach(g=>{
+html+=`
+<div class="group">
+<b>${g.name}</b>
+<button onclick="addCard(${g.id})">+字卡</button>
+<hr>
+${g.cards.map((c,i)=>`
+<div>${c}
+<button onclick="delCard(${g.id},${i})">删除</button>
+</div>`).join('')}
+</div>`;
+});
+groupsEl=document.getElementById('groups');
+groupsEl.innerHTML=html;
+}
+
+function addCard(id){
+let t=prompt("字卡内容");
+if(!t)return;
+groups.find(x=>x.id===id).cards.push(t);
+saveAll();
+renderGroups();
+}
+
+function delCard(id,i){
+groups.find(x=>x.id===id).cards.splice(i,1);
+saveAll();
+renderGroups();
+}
+
+function sendMe(){
+let t=txt.value.trim();
+if(!t)return;
+addMsg("me",t);
+txt.value="";
+}
+
+function addMsg(side,text){
+let d=document.createElement("div");
+d.className="msg "+(side==="me"?"right":"");
+let av=side==="me"?profile.me.avatar:profile.partner.avatar;
+let name=side==="me"?profile.me.name:profile.partner.name;
+d.innerHTML=`
+${side==="other"?'<img class="avatar" src="'+(av||'')+'">':''}
+<div>
+<div class="small">${name}</div>
+<div class="bubble">${text}</div>
+</div>
+${side==="me"?'<img class="avatar" src="'+(av||'')+'">':''}
+`;
+chat.appendChild(d);
+chat.scrollTop=chat.scrollHeight;
+}
+
+function openCards(){
+cardPage.classList.add('show');
+let html='';
+groups.forEach(g=>{
+html+=`<div class="card"><h3>${g.name}</h3>`;
+g.cards.forEach(c=>{
+html+=`<div style="padding:8px;border-bottom:1px solid #eee" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
+});
+html+='</div>';
+});
+cardArea.innerHTML=html;
+}
+
+function sendCard(t){
+addMsg("other",t);
+closeCards();
+}
+
+function closeCards(){
+cardPage.classList.remove('show');
+}
+
+renderProfile();
 </script>
-
 </body>
 </html>
