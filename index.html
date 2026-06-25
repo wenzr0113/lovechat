@@ -8,11 +8,10 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-/* 头部样式：确保标题区能够完美容纳昵称和动态输入状态 */
+/* 头部样式 */
 .header{height:56px;background:#f7f7f7;display:flex;justify-content:space-between;align-items:center;padding:0 15px;border-bottom:1px solid #ddd;flex-shrink:0}
 .header-title-container{display:flex;align-items:center;gap:4px;font-size:16px;font-weight:500;color:#000;max-width:80%;overflow:hidden}
 #partnerTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* 微信原生的轻微灰色输入提示字 */
 #typingStatus{font-size:14px;color:#666;font-weight:normal;white-space:nowrap}
 
 .header .menu-btn{font-size:20px;cursor:pointer;user-select:none;padding:5px}
@@ -35,7 +34,7 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 昵称样式 */
 .small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
 
-/* 完美还原微信气泡：4px微圆角、自适应大小、原生小尖尖 */
+/* 完美还原微信气泡 */
 .bubble-container {
     display: flex;
     align-items: flex-end;
@@ -59,7 +58,6 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     display: inline-block;
     width: fit-content;
 }
-/* 对方气泡的左侧小尖尖 */
 .msg:not(.right) .bubble::before {
     content: "";
     position: absolute;
@@ -72,7 +70,6 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     border-right: 5px solid #fff;
 }
 
-/* 自己气泡的绿色与右侧小尖尖 */
 .msg.right .bubble{background:#95ec69}
 .msg.right .bubble::before {
     content: "";
@@ -100,11 +97,8 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 微信底部发送大容器 */
 .footer-container{background:#f7f7f7;border-top:1px solid #dddddd;flex-shrink:0;display:flex;flex-direction:column}
 .footer{padding:8px 10px;display:flex;align-items:center;gap:10px;height:54px}
-
-/* 微信的原生文本框 */
 .footer textarea{flex:1;height:38px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
 
-/* 高仿微信极细圆圈图标 */
 .footer-btn{
     width: 30px;
     height: 30px;
@@ -120,11 +114,9 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     margin: 0;
     user-select: none;
     outline: none;
-    transition: opacity 0.1s;
 }
 .footer-btn:active{opacity:0.5}
 .footer-btn.emoji-icon { font-size: 20px; line-height: 1; }
-
 .footer-btn.plus-icon { position: relative; }
 .footer-btn.plus-icon::before,
 .footer-btn.plus-icon::after {
@@ -133,7 +125,6 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .footer-btn.plus-icon::before { width: 14px; height: 1.5px; }
 .footer-btn.plus-icon::after { width: 1.5px; height: 14px; }
 
-/* 微信风格发送按钮 */
 .send-btn-wechat{width:60px;height:34px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .send-btn-wechat:active{background:#06ad56}
 
@@ -160,7 +151,28 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .page.show{left:0}
 .phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
 .back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;padding:8px;border-radius:4px;user-select:none}
-.card{background:#fff;margin:10px;padding:12px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+
+/* 卡片排版风格 */
+.card{background:#fff;margin:10px;padding:15px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.card h3 {font-size:15px;color:#333;display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.card-label {font-size:13px;color:#666;margin-bottom:6px;margin-top:10px}
+
+/* 轻质圆角输入框 */
+.wechat-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    background: #fcfcfc;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.wechat-input:focus { border-color: #07c160; }
+
+.input-row { display: flex; gap: 10px; align-items: center; }
+.input-row .wechat-input { flex: 1; }
+
 .group{border:1px solid #ddd;margin:10px 0;border-radius:6px;background:#fff;overflow:hidden}
 .group-header{background:#f9f9f9;padding:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .group-title{font-weight:bold;display:flex;align-items:center;gap:6px}
@@ -170,8 +182,9 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .group.open .group-content{display:block}
 .card-list{max-height:180px;overflow-y:auto;margin-top:6px}
 .card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f5f5f5}
-button{cursor:pointer;padding:4px 8px;border:1px solid #ccc;background:#fff;border-radius:4px}
-input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100%;max-width:260px}
+button{cursor:pointer;padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:6px;font-size:13px}
+button.primary-btn {background:#07c160;color:#fff;border-color:#07c160;font-weight:bold}
+button.primary-btn:active {background:#06ad56}
 </style>
 </head>
 <body>
@@ -179,14 +192,13 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 <div class="header">
     <div class="header-title-container">
         <div id="partnerTitle">对方</div>
-        <div id="typingStatus" style="display: none;">🔑 正在输入...</div>
+        <div id="typingStatus" style="display: none;">对方正在输入...</div>
     </div>
     <div class="menu-btn" onclick="menu()">☰</div>
 </div>
 
 <div class="chat" id="chat"></div>
 
-<!-- 底部控制栏 -->
 <div class="footer-container">
     <div class="footer">
         <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
@@ -224,7 +236,6 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
     </div>
 </div>
 
-<!-- 右侧抽屉菜单栏 -->
 <div class="drawer" id="drawer">
     <div class="item" onclick="openSystem()">⚙️ 系统设置</div>
     <div class="item" onclick="openManageCards()">🃏 字卡管理</div>
@@ -232,27 +243,43 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
     <div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
-<!-- 1. 系统设置页面 (纯粹修改头像昵称) -->
 <div class="page" id="systemPage">
     <div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统设置</div></div>
+    
     <div class="card">
-        <h3>修改头像昵称</h3><br>
-        <div>我的头像</div>
-        <img id="meAvatarPreview" class="avatar"><br><br>
-        <input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br><br>
-        <div>我的昵称</div>
-        <input type="text" id="meName"><br><br>
-        <div>对方头像</div>
-        <img id="partnerAvatarPreview" class="avatar"><br><br>
-        <input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br><br>
-        <div>对方昵称</div>
-        <input type="text" id="partnerName"><br><br>
-        <button onclick="saveProfile()">保存资料</button>
+        <h3>👤 修改头像昵称</h3>
+        <div class="card-label">我的头像</div>
+        <img id="meAvatarPreview" class="avatar"><br>
+        <input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br>
+        <div class="card-label">我的昵称</div>
+        <input type="text" id="meName" class="wechat-input"><br>
+        <div class="card-label">对方头像</div>
+        <img id="partnerAvatarPreview" class="avatar"><br>
+        <input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br>
+        <div class="card-label">对方昵称</div>
+        <input type="text" id="partnerName" class="wechat-input"><br><br>
+        <button class="primary-btn" onclick="saveProfile()">保存基础资料</button>
     </div>
+
+    <div class="card">
+        <h3>⚙️ 系统频率控制</h3>
+        
+        <div class="card-label">对方连发最大条数 (1-7)</div>
+        <input type="number" id="maxComboLines" class="wechat-input" min="1" max="7" placeholder="3">
+        
+        <div class="card-label">聊天回复最快(秒) ~ 最慢(分钟)</div>
+        <div class="input-row">
+            <input type="number" id="replyMinSec" class="wechat-input" min="0" placeholder="最快 (秒)">
+            <span style="color:#aaa;">~</span>
+            <input type="number" id="replyMaxMin" class="wechat-input" min="0" placeholder="最慢 (分钟)">
+        </div>
+        <br>
+        <button class="primary-btn" onclick="saveFrequencySettings()">保存频率设置</button>
+    </div>
+
     <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
-<!-- 2. 字卡管理页面 (从系统设置独立挪出) -->
 <div class="page" id="manageCardsPage">
     <div class="phead"><div class="back-btn" onclick="closeManageCards()">← 字卡管理</div></div>
     <div class="card">
@@ -266,7 +293,6 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
     <div class="card"><button onclick="closeManageCards()">返回聊天</button></div>
 </div>
 
-<!-- 3. 聊天中的字卡快捷回复弹窗 -->
 <div class="page" id="cardPage">
     <div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
     <div id="cardArea"></div>
@@ -277,74 +303,104 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
+let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1}');
+
 let openGroupIds=[];
 let currentActivePanel = null;
 
 function saveAll(){
-localStorage.setItem("profile",JSON.stringify(profile));
-localStorage.setItem("groups",JSON.stringify(groups));
-localStorage.setItem("customEmojis",JSON.stringify(customEmojis));
+    localStorage.setItem("profile",JSON.stringify(profile));
+    localStorage.setItem("groups",JSON.stringify(groups));
+    localStorage.setItem("customEmojis",JSON.stringify(customEmojis));
+    localStorage.setItem("freqSettings",JSON.stringify(freqSettings));
 }
 
 function menu(){
-document.getElementById('drawer').classList.toggle('show');
+    document.getElementById('drawer').classList.toggle('show');
 }
 
 function avatarChange(e,type){
-let f=e.target.files[0];
-if(!f)return;
-let r=new FileReader();
-r.onload=function(){
-profile[type].avatar=r.result;
-renderProfile();
-saveAll();
-}
-r.readAsDataURL(f);
+    let f=e.target.files[0];
+    if(!f)return;
+    let r=new FileReader();
+    r.onload=function(){
+        profile[type].avatar=r.result;
+        renderProfile();
+        saveAll();
+    }
+    r.readAsDataURL(f);
 }
 
 function renderProfile(){
-meName.value=profile.me.name;
-partnerName.value=profile.partner.name;
-partnerTitle.innerText=profile.partner.name;
-if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
-if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
+    meName.value=profile.me.name;
+    partnerName.value=profile.partner.name;
+    partnerTitle.innerText=profile.partner.name;
+    if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
+    if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
+
+    document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
+    document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
+    document.getElementById('replyMaxMin').value = freqSettings.replyMaxMin || 1;
 }
 
 function saveProfile(){
-profile.me.name=meName.value;
-profile.partner.name=partnerName.value;
-saveAll();
-renderProfile();
-alert("已保存");
+    profile.me.name=meName.value;
+    profile.partner.name=partnerName.value;
+    saveAll();
+    renderProfile();
+    alert("基础资料已保存");
 }
 
-/* 控制系统设置页面 */
+function saveFrequencySettings() {
+    let maxLines = parseInt(document.getElementById('maxComboLines').value) || 1;
+    if (maxLines > 7) {
+        alert("连发最大条数上限为7条，系统已自动调整为7条。");
+        maxLines = 7;
+    } else if (maxLines < 1) {
+        maxLines = 1;
+    }
+    
+    let minSec = parseInt(document.getElementById('replyMinSec').value);
+    let maxMin = parseInt(document.getElementById('replyMaxMin').value);
+    
+    if (isNaN(minSec) || minSec < 0) minSec = 3;
+    if (isNaN(maxMin) || maxMin < 0) maxMin = 1;
+
+    freqSettings.maxComboLines = maxLines;
+    freqSettings.replyMinSec = minSec;
+    freqSettings.replyMaxMin = maxMin;
+    
+    saveAll();
+    renderProfile();
+    alert("回复频率参数已成功应用！");
+}
+
 function openSystem(){
-systemPage.classList.add('show');
-drawer.classList.remove('show');
+    systemPage.classList.add('show');
+    drawer.classList.remove('show');
+    renderProfile();
 }
 function closeSystem(){
-systemPage.classList.remove('show');
+    systemPage.classList.remove('show');
 }
 
-/* 控制独立的字卡管理页面 */
 function openManageCards(){
-manageCardsPage.classList.add('show');
-drawer.classList.remove('show');
-renderGroups();
+    manageCardsPage.classList.add('show');
+    drawer.classList.remove('show');
+    renderGroups();
 }
 function closeManageCards(){
-manageCardsPage.classList.remove('show');
+    manageCardsPage.classList.remove('show');
 }
 
 function addGroup(){
-let n=prompt("分组名称");
-if(!n)return;
-let newId = Date.now();
-groups.push({id:newId,name:n,cards:[]});
-openGroupIds.push(newId);
-saveAll();
-renderGroups();
+    let n=prompt("分组名称");
+    if(!n)return;
+    let newId = Date.now();
+    groups.push({id:newId,name:n,cards:[]});
+    openGroupIds.push(newId);
+    saveAll();
+    renderGroups();
 }
 
 function toggleGroup(id){
@@ -355,42 +411,42 @@ function toggleGroup(id){
 }
 
 function renderGroups(){
-let html='';
-groups.forEach(g=>{
-let isOpen = openGroupIds.includes(g.id) ? 'open' : '';
-html+=`
-<div class="group ${isOpen}">
-<div class="group-header" onclick="toggleGroup(${g.id})">
-    <span class="group-title"><span class="group-arrow">▶</span> ${g.name} (${g.cards.length})</span>
-    <button onclick="event.stopPropagation();addCard(${g.id})">+字卡</button>
-</div>
-<div class="group-content">
-    <div class="card-list">
-    ${g.cards.map((c,i)=>`
-    <div class="card-item">
-        <span>${c}</span>
-        <button onclick="delCard(${g.id},${i})">删除</button>
-    </div>`).join('')}
-    ${g.cards.length === 0 ? '<div class="small" style="text-align:center;color:#999;padding:10px 0;">暂无字卡</div>':''}
-    </div>
-</div>
-</div>`;
-});
-document.getElementById('groups').innerHTML=html;
+    let html='';
+    groups.forEach(g=>{
+        let isOpen = openGroupIds.includes(g.id) ? 'open' : '';
+        html+=`
+        <div class="group ${isOpen}">
+        <div class="group-header" onclick="toggleGroup(${g.id})">
+            <span class="group-title"><span class="group-arrow">▶</span> ${g.name} (${g.cards.length})</span>
+            <button onclick="event.stopPropagation();addCard(${g.id})">+字卡</button>
+        </div>
+        <div class="group-content">
+            <div class="card-list">
+            ${g.cards.map((c,i)=>`
+            <div class="card-item">
+                <span>${c}</span>
+                <button onclick="delCard(${g.id},${i})">删除</button>
+            </div>`).join('')}
+            ${g.cards.length === 0 ? '<div class="small" style="text-align:center;color:#999;padding:10px 0;">暂无字卡</div>':''}
+            </div>
+        </div>
+        </div>`;
+    });
+    document.getElementById('groups').innerHTML=html;
 }
 
 function addCard(id){
-let t=prompt("字卡内容");
-if(!t)return;
-groups.find(x=>x.id===id).cards.push(t);
-saveAll();
-renderGroups();
+    let t=prompt("字卡内容");
+    if(!t)return;
+    groups.find(x=>x.id===id).cards.push(t);
+    saveAll();
+    renderGroups();
 }
 
 function delCard(id,i){
-groups.find(x=>x.id===id).cards.splice(i,1);
-saveAll();
-renderGroups();
+    groups.find(x=>x.id===id).cards.splice(i,1);
+    saveAll();
+    renderGroups();
 }
 
 function importJSON(e) {
@@ -529,58 +585,59 @@ function sendImage(e) {
 }
 
 function sendMe(){
-let t=txt.value.trim();
-if(!t)return;
-addMsg("me",t);
-txt.value="";
-plusToggleBtn.style.display = 'flex';
-sendBtn.style.display = 'none';
+    let t=txt.value.trim();
+    if(!t)return;
+    addMsg("me",t);
+    txt.value="";
+    plusToggleBtn.style.display = 'flex';
+    sendBtn.style.display = 'none';
 }
 
 function addMsg(side,text,isHtml=false){
-let d=document.createElement("div");
-d.className="msg "+(side==="me"?"right":"");
-let av=side==="me"?profile.me.avatar:profile.partner.avatar;
-let name=side==="me"?profile.me.name:profile.partner.name;
+    let d=document.createElement("div");
+    d.className="msg "+(side==="me"?"right":"");
+    let av=side==="me"?profile.me.avatar:profile.partner.avatar;
+    let name=side==="me"?profile.me.name:profile.partner.name;
 
-let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
+    let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
 
-let statusHtml = '';
-let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
+    let statusHtml = '';
+    let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
 
-if (side === "me") {
-    statusHtml = `<span class="read-status unread" id="${uniqueStatusId}">未读</span>`;
-}
+    if (side === "me") {
+        statusHtml = `<span class="read-status unread" id="${uniqueStatusId}">未读</span>`;
+    }
 
-d.innerHTML=`
-<img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
-<div class="msg-body">
-    <div class="small" style="text-align:${side==='me'?'right':'left'}">${name}</div>
-    <div class="bubble-container">
-        ${contentHtml}
-        ${statusHtml}
+    d.innerHTML=`
+    <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
+    <div class="msg-body">
+        <div class="small" style="text-align:${side==='me'?'right':'left'}">${name}</div>
+        <div class="bubble-container">
+            ${contentHtml}
+            ${statusHtml}
+        </div>
     </div>
-</div>
-`;
-chat.appendChild(d);
-chat.scrollTop=chat.scrollHeight;
+    `;
+    chat.appendChild(d);
+    chat.scrollTop=chat.scrollHeight;
 
-if (side === "me") {
-    let randomDelay = Math.floor(Math.random() * (60 - 3 + 1) + 3) * 1000;
-    setTimeout(function() {
-        let statusEl = document.getElementById(uniqueStatusId);
-        if (statusEl) {
-            statusEl.innerText = "已读";
-            statusEl.classList.remove("unread");
-            statusEl.classList.add("read");
-            
-            triggerAutoReply();
-        }
-    }, randomDelay);
-}
+    if (side === "me") {
+        let randomDelay = Math.floor(Math.random() * (60 - 3 + 1) + 3) * 1000;
+        setTimeout(function() {
+            let statusEl = document.getElementById(uniqueStatusId);
+            if (statusEl) {
+                statusEl.innerText = "已读";
+                statusEl.classList.remove("unread");
+                statusEl.classList.add("read");
+                
+                triggerAdvancedAutoReply();
+            }
+        }, randomDelay);
+    }
 }
 
-function triggerAutoReply() {
+// ✨ 融合【单条最多3张字卡拼接】与【多气泡时序追发】的核心逻辑
+function triggerAdvancedAutoReply() {
     if (Math.random() < 0.1) {
         console.log("对方已读不回...");
         return; 
@@ -595,56 +652,86 @@ function triggerAutoReply() {
 
     if (allCards.length === 0) return;
 
-    let maxAllowed = Math.min(4, allCards.length);
-    let replyCount = Math.floor(Math.random() * maxAllowed) + 1;
+    // 1. 确定本次回复要追发几条气泡消息 (受你填写的最大条数控制，1~7条)
+    let userMaxLines = parseInt(freqSettings.maxComboLines) || 3;
+    if(userMaxLines > 7) userMaxLines = 7;
+    if(userMaxLines < 1) userMaxLines = 1;
 
-    let chosenCards = [];
-    let tempCards = [...allCards];
-    for (let i = 0; i < replyCount; i++) {
-        let randomIndex = Math.floor(Math.random() * tempCards.length);
-        chosenCards.push(tempCards.splice(randomIndex, 1)[0]);
-    }
+    let bubbleCount = Math.floor(Math.random() * userMaxLines) + 1; 
 
-    let combinedText = chosenCards.join('\n');
-
-    let typingEl = document.getElementById("typingStatus");
-    if (typingEl) {
-        typingEl.style.display = "inline-block";
-    }
-
-    let typingDuration = Math.floor(Math.random() * 2000) + 1500; 
-    setTimeout(function() {
-        addMsg("other", combinedText);
-        if (typingEl) {
-            typingEl.style.display = "none";
+    // 2. 依次生成每一条消息的文本 (每条消息内部由 1~3 张字卡自由随机组合，可重复使用库内字卡)
+    let bubbleQueue = [];
+    for (let b = 0; b < bubbleCount; b++) {
+        // 每条消息抽取的字卡数量：1到3张
+        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1;
+        let chosenCards = [];
+        
+        for (let c = 0; c < cardsInBubbleCount; c++) {
+            let randomIndex = Math.floor(Math.random() * allCards.length);
+            chosenCards.push(allCards[randomIndex]);
         }
-    }, typingDuration);
+        // 用换行拼成一条独立消息
+        bubbleQueue.push(chosenCards.join('\n'));
+    }
+
+    // 3. 计算首条消息随机延迟
+    let minMs = (parseInt(freqSettings.replyMinSec) || 3) * 1000;
+    let maxMs = (parseInt(freqSettings.replyMaxMin) || 1) * 60 * 1000;
+    if (minMs > maxMs) { let tmp = minMs; minMs = maxMs; maxMs = tmp; }
+    
+    let firstMessageDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+
+    // 4. 时序机制依次蹦出气泡
+    sendQueueItem(bubbleQueue, 0, firstMessageDelay);
 }
 
-/* 聊天时，点击加号面板里的“字卡回复”按钮弹出的快捷发送窗 */
+function sendQueueItem(queue, index, delayTime) {
+    if (index >= queue.length) return;
+
+    setTimeout(function() {
+        let typingEl = document.getElementById("typingStatus");
+        if (typingEl) typingEl.style.display = "inline-block";
+
+        // 第一条使用完整缓冲，后续连续轰炸的气泡打字时间为 1~2.5 秒
+        let processTypingTime = (index === 0) ? Math.min(delayTime, 2000) : (Math.floor(Math.random() * 1500) + 1000);
+
+        setTimeout(function() {
+            addMsg("other", queue[index]);
+            if (typingEl) typingEl.style.display = "none";
+
+            if (index + 1 < queue.length) {
+                // 两条独立微信气泡蹦出之间的喘息空隙
+                let nextBurstDelay = Math.floor(Math.random() * 1000) + 1000;
+                sendQueueItem(queue, index + 1, nextBurstDelay);
+            }
+        }, processTypingTime);
+
+    }, (index === 0) ? (delayTime - Math.min(delayTime, 2000)) : delayTime);
+}
+
 function openCards(){
-cardPage.classList.add('show');
-closeAllPanels();
-let html='';
-groups.forEach(g=>{
-html+=`<div class="card"><h3>${g.name} (${g.cards.length})</h3>
-<div style="max-height:160px; overflow-y:auto; margin-top:6px;">`;
-g.cards.forEach(c=>{
-html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
-});
-if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
-html+='</div></div>';
-});
-cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先前往侧边栏【字卡管理】添加字卡</div>';
+    cardPage.classList.add('show');
+    closeAllPanels();
+    let html='';
+    groups.forEach(g=>{
+        html+=`<div class="card"><h3>${g.name} (${g.cards.length})</h3>
+        <div style="max-height:160px; overflow-y:auto; margin-top:6px;">`;
+        g.cards.forEach(c=>{
+            html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
+        });
+        if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
+        html+='</div></div>';
+    });
+    cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先前往侧边栏【字卡管理】添加字卡</div>';
 }
 
 function sendCard(t){
-addMsg("other",t);
-closeCards();
+    addMsg("other",t);
+    closeCards();
 }
 
 function closeCards(){
-cardPage.classList.remove('show');
+    cardPage.classList.remove('show');
 }
 
 document.getElementById('txt').addEventListener('keydown', function(e) {
