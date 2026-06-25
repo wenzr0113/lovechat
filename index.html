@@ -34,32 +34,39 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 昵称样式 */
 .small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
 
-/* 完美还原微信气泡 */
+/* 气泡外层包裹，支持排列 */
 .bubble-container {
     display: flex;
     align-items: flex-end;
     gap: 6px;
+    width: 100%;
 }
 .msg.right .bubble-container {
     flex-direction: row-reverse;
 }
 
+/* 🌟 严格对齐微信气泡换行逻辑 🌟 */
 .bubble{
     padding: 10px 12px;
     border-radius: 4px;
     background: #fff;
     color: #000;
-    /* ✨ 核心修复：采用智能安全换行，防止标点符号、特殊括号在手机端落单或奇怪折行 */
-    word-break: break-word;
-    overflow-wrap: break-word;
+    
+    /* 核心修复：文字不折行尽量往右撑，直到达到最大限制 */
+    display: inline-block;
+    width: fit-content;
+    max-width: 260px; /* ✨ 限制气泡最大宽度，到了这个距离才会换行 */
+    
+    /* 智能中文物理换行，保证不提前乱断开 */
+    word-break: break-all; 
     white-space: pre-wrap;
+    
     line-height: 1.4;
     font-size: 15px;
     position: relative;
     box-shadow: none;
-    display: inline-block;
-    width: fit-content;
 }
+
 .msg:not(.right) .bubble::before {
     content: "";
     position: absolute;
@@ -822,7 +829,6 @@ function triggerSystemActiveMessage() {
 
 function triggerAdvancedAutoReply() {
     if (Math.random() < 0.1) {
-        console.log("对方已读不回...");
         return; 
     }
 
