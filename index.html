@@ -152,12 +152,11 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
 .back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;padding:8px;border-radius:4px;user-select:none}
 
-/* 卡片排版风格 */
+/* 卡片与排版 */
 .card{background:#fff;margin:10px;padding:15px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
 .card h3 {font-size:15px;color:#333;display:flex;align-items:center;gap:6px;margin-bottom:12px}
 .card-label {font-size:13px;color:#666;margin-bottom:6px;margin-top:10px}
 
-/* 轻质圆角输入框 */
 .wechat-input {
     width: 100%;
     padding: 10px 12px;
@@ -264,16 +263,29 @@ button.primary-btn:active {background:#06ad56}
     <div class="card">
         <h3>⚙️ 系统频率控制</h3>
         
-        <div class="card-label">对方连发最大条数 (1-7)</div>
+        <div class="card-label">① 对方连发最大条数 (被动回复，1-7条)</div>
         <input type="number" id="maxComboLines" class="wechat-input" min="1" max="7" placeholder="3">
         
-        <div class="card-label">聊天回复最快(秒) ~ 最慢(分钟)</div>
+        <div class="card-label">② 聊天回复最快(秒) ~ 最慢(分钟)</div>
         <div class="input-row">
             <input type="number" id="replyMinSec" class="wechat-input" min="0" placeholder="最快 (秒)">
             <span style="color:#aaa;">~</span>
             <input type="number" id="replyMaxMin" class="wechat-input" min="0" placeholder="最慢 (分钟)">
         </div>
-        <br>
+
+        <hr style="border:none; border-top:1px dashed #eee; margin:15px 0;">
+
+        <div class="card-label">③ 随机发消息最快(秒) ~ 最慢(分钟) (系统主动挂机发送)</div>
+        <div class="input-row">
+            <input type="number" id="activeMinSec" class="wechat-input" min="0" placeholder="主动最快 (秒)">
+            <span style="color:#aaa;">~</span>
+            <input type="number" id="activeMaxMin" class="wechat-input" min="0" placeholder="主动最慢 (分钟)">
+        </div>
+
+        <div class="card-label">④ 主动发消息最多条数 (1-3条)</div>
+        <input type="number" id="activeMaxLines" class="wechat-input" min="1" max="3" placeholder="2">
+        
+        <br><br>
         <button class="primary-btn" onclick="saveFrequencySettings()">保存频率设置</button>
     </div>
 
@@ -303,10 +315,13 @@ button.primary-btn:active {background:#06ad56}
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
-let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1}');
+
+// ✨ 初始化扩充：增加主动轰炸的默认设定参数
+let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1,"activeMinSec":30,"activeMaxMin":5,"activeMaxLines":2}');
 
 let openGroupIds=[];
 let currentActivePanel = null;
+let activeMsgTimer = null; // ✨ 核心：存放挂机主动发消息的定时器句柄
 
 function saveAll(){
     localStorage.setItem("profile",JSON.stringify(profile));
@@ -338,9 +353,14 @@ function renderProfile(){
     if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
     if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
 
+    // 载入被动与主动的设定输入框
     document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
     document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
     document.getElementById('replyMaxMin').value = freqSettings.replyMaxMin || 1;
+
+    document.getElementById('activeMinSec').value = freqSettings.activeMinSec || 30;
+    document.getElementById('activeMaxMin').value = freqSettings.activeMaxMin || 5;
+    document.getElementById('activeMaxLines').value = freqSettings.activeMaxLines || 2;
 }
 
 function saveProfile(){
@@ -352,27 +372,38 @@ function saveProfile(){
 }
 
 function saveFrequencySettings() {
+    // 限制连发最大数
     let maxLines = parseInt(document.getElementById('maxComboLines').value) || 1;
-    if (maxLines > 7) {
-        alert("连发最大条数上限为7条，系统已自动调整为7条。");
-        maxLines = 7;
-    } else if (maxLines < 1) {
-        maxLines = 1;
-    }
+    if (maxLines > 7) { alert("被动连发最大上限为7条"); maxLines = 7; }
+    if (maxLines < 1) maxLines = 1;
+
+    // 限制主动最大条数
+    let actLines = parseInt(document.getElementById('activeMaxLines').value) || 1;
+    if (actLines > 3) { alert("主动发消息最多只能连续发3条哦"); actLines = 3; }
+    if (actLines < 1) actLines = 1;
     
     let minSec = parseInt(document.getElementById('replyMinSec').value);
     let maxMin = parseInt(document.getElementById('replyMaxMin').value);
+    let actMinSec = parseInt(document.getElementById('activeMinSec').value);
+    let actMaxMin = parseInt(document.getElementById('activeMaxMin').value);
     
     if (isNaN(minSec) || minSec < 0) minSec = 3;
     if (isNaN(maxMin) || maxMin < 0) maxMin = 1;
+    if (isNaN(actMinSec) || actMinSec < 0) actMinSec = 30;
+    if (isNaN(actMaxMin) || actMaxMin < 0) actMaxMin = 5;
 
     freqSettings.maxComboLines = maxLines;
     freqSettings.replyMinSec = minSec;
     freqSettings.replyMaxMin = maxMin;
+    freqSettings.activeMinSec = actMinSec;
+    freqSettings.activeMaxMin = actMaxMin;
+    freqSettings.activeMaxLines = actLines;
     
     saveAll();
     renderProfile();
-    alert("回复频率参数已成功应用！");
+    alert("所有的频率控制参数已全部生效！");
+
+    resetActiveMessageTimer(); // 重新规划挂机倒计时
 }
 
 function openSystem(){
@@ -621,7 +652,10 @@ function addMsg(side,text,isHtml=false){
     chat.appendChild(d);
     chat.scrollTop=chat.scrollHeight;
 
+    // ✨ 只要你发了消息，就必须瞬间重置挂机主动发送的计时器，以你最新的发信时间重新开始算！
     if (side === "me") {
+        resetActiveMessageTimer();
+
         let randomDelay = Math.floor(Math.random() * (60 - 3 + 1) + 3) * 1000;
         setTimeout(function() {
             let statusEl = document.getElementById(uniqueStatusId);
@@ -636,7 +670,55 @@ function addMsg(side,text,isHtml=false){
     }
 }
 
-// ✨ 融合【单条最多3张字卡拼接】与【多气泡时序追发】的核心逻辑
+// ✨ 重新配置规划系统主动找你的倒计时器
+function resetActiveMessageTimer() {
+    if (activeMsgTimer) clearTimeout(activeMsgTimer);
+
+    let minMs = (parseInt(freqSettings.activeMinSec) || 30) * 1000;
+    let maxMs = (parseInt(freqSettings.activeMaxMin) || 5) * 60 * 1000;
+    if (minMs > maxMs) { let tmp = minMs; minMs = maxMs; maxMs = tmp; }
+
+    let randomTriggerDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+
+    activeMsgTimer = setTimeout(function() {
+        triggerSystemActiveMessage();
+    }, randomTriggerDelay);
+}
+
+// ✨ 系统核心：主动触发连续消息骚扰你
+function triggerSystemActiveMessage() {
+    let allCards = [];
+    groups.forEach(g => {
+        if (g.cards && g.cards.length > 0) allCards = allCards.concat(g.cards);
+    });
+    if (allCards.length === 0) { resetActiveMessageTimer(); return; }
+
+    // 确定主动连续发几条气泡（受④限制，最大3条）
+    let maxLinesAllowed = parseInt(freqSettings.activeMaxLines) || 2;
+    if(maxLinesAllowed > 3) maxLinesAllowed = 3;
+    if(maxLinesAllowed < 1) maxLinesAllowed = 1;
+
+    let bubbleCount = Math.floor(Math.random() * maxLinesAllowed) + 1;
+
+    let bubbleQueue = [];
+    for (let b = 0; b < bubbleCount; b++) {
+        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; // 单个气泡混合1~3张
+        let chosenCards = [];
+        for (let c = 0; c < cardsInBubbleCount; c++) {
+            let randomIndex = Math.floor(Math.random() * allCards.length);
+            chosenCards.push(allCards[randomIndex]);
+        }
+        bubbleQueue.push(chosenCards.join('\n'));
+    }
+
+    // 主动出击时，开始触发带打字状态的追发队列
+    sendQueueItem(bubbleQueue, 0, 1500); // 1.5秒的初次正在输入时间
+    
+    // 主动轰炸完毕后，立即部署下一轮循环等待
+    resetActiveMessageTimer();
+}
+
+// 被动触发函数：针对已读消息进行的恢复
 function triggerAdvancedAutoReply() {
     if (Math.random() < 0.1) {
         console.log("对方已读不回...");
@@ -645,43 +727,37 @@ function triggerAdvancedAutoReply() {
 
     let allCards = [];
     groups.forEach(g => {
-        if (g.cards && g.cards.length > 0) {
-            allCards = allCards.concat(g.cards);
-        }
+        if (g.cards && g.cards.length > 0) allCards = allCards.concat(g.cards);
     });
-
     if (allCards.length === 0) return;
 
-    // 1. 确定本次回复要追发几条气泡消息 (受你填写的最大条数控制，1~7条)
+    // 1. 确定本次被动发信气泡数 (1~7条)
     let userMaxLines = parseInt(freqSettings.maxComboLines) || 3;
     if(userMaxLines > 7) userMaxLines = 7;
     if(userMaxLines < 1) userMaxLines = 1;
 
     let bubbleCount = Math.floor(Math.random() * userMaxLines) + 1; 
 
-    // 2. 依次生成每一条消息的文本 (每条消息内部由 1~3 张字卡自由随机组合，可重复使用库内字卡)
+    // 2. 依次包装出气泡队列内容
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
-        // 每条消息抽取的字卡数量：1到3张
-        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1;
+        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; // 1~3张
         let chosenCards = [];
-        
         for (let c = 0; c < cardsInBubbleCount; c++) {
             let randomIndex = Math.floor(Math.random() * allCards.length);
             chosenCards.push(allCards[randomIndex]);
         }
-        // 用换行拼成一条独立消息
         bubbleQueue.push(chosenCards.join('\n'));
     }
 
-    // 3. 计算首条消息随机延迟
+    // 3. 计算设定好的回复随机间隔
     let minMs = (parseInt(freqSettings.replyMinSec) || 3) * 1000;
     let maxMs = (parseInt(freqSettings.replyMaxMin) || 1) * 60 * 1000;
     if (minMs > maxMs) { let tmp = minMs; minMs = maxMs; maxMs = tmp; }
     
     let firstMessageDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 
-    // 4. 时序机制依次蹦出气泡
+    // 4. 起航发射
     sendQueueItem(bubbleQueue, 0, firstMessageDelay);
 }
 
@@ -692,7 +768,6 @@ function sendQueueItem(queue, index, delayTime) {
         let typingEl = document.getElementById("typingStatus");
         if (typingEl) typingEl.style.display = "inline-block";
 
-        // 第一条使用完整缓冲，后续连续轰炸的气泡打字时间为 1~2.5 秒
         let processTypingTime = (index === 0) ? Math.min(delayTime, 2000) : (Math.floor(Math.random() * 1500) + 1000);
 
         setTimeout(function() {
@@ -700,7 +775,6 @@ function sendQueueItem(queue, index, delayTime) {
             if (typingEl) typingEl.style.display = "none";
 
             if (index + 1 < queue.length) {
-                // 两条独立微信气泡蹦出之间的喘息空隙
                 let nextBurstDelay = Math.floor(Math.random() * 1000) + 1000;
                 sendQueueItem(queue, index + 1, nextBurstDelay);
             }
@@ -741,7 +815,9 @@ document.getElementById('txt').addEventListener('keydown', function(e) {
     }
 });
 
+// 初始化渲染并开启主动挂机计时器
 renderProfile();
+resetActiveMessageTimer();
 </script>
 </body>
 </html>
