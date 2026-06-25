@@ -289,6 +289,18 @@ button.primary-btn:active {background:#06ad56}
         <button class="primary-btn" onclick="saveFrequencySettings()">保存频率设置</button>
     </div>
 
+    <div class="card">
+        <h3>💬 聊天记录备份</h3>
+        <div class="card-label" style="color:#999; font-size:12px; margin-bottom:10px;">您可以随时备份当前网页下的完整聊天历史，防止清理浏览器缓存造成数据丢失。</div>
+        <div class="input-row">
+            <button class="primary-btn" onclick="exportChatHistory()" style="flex:1;">📤 导出聊天记录</button>
+            <button onclick="document.getElementById('chatHistoryFile').click()" style="flex:1; border: 1px solid #07c160; color:#07c160; font-weight:bold;">📥 导入聊天记录</button>
+        </div>
+        <input type="file" id="chatHistoryFile" accept=".json" style="display:none" onchange="importChatHistory(event)">
+        <br>
+        <button onclick="clearChatHistory()" style="width:100%; border-color:#ff4d4f; color:#ff4d4f; margin-top:8px;">⚠️ 清空本地聊天历史</button>
+    </div>
+
     <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
@@ -315,19 +327,21 @@ button.primary-btn:active {background:#06ad56}
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
-
-// ✨ 初始化扩充：增加主动轰炸的默认设定参数
 let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1,"activeMinSec":30,"activeMaxMin":5,"activeMaxLines":2}');
+
+// ✨ 核心持久化对象：读取保存在本地的历史记录数组
+let chatHistory=JSON.parse(localStorage.getItem('chatHistory')||'[]');
 
 let openGroupIds=[];
 let currentActivePanel = null;
-let activeMsgTimer = null; // ✨ 核心：存放挂机主动发消息的定时器句柄
+let activeMsgTimer = null; 
 
 function saveAll(){
     localStorage.setItem("profile",JSON.stringify(profile));
     localStorage.setItem("groups",JSON.stringify(groups));
     localStorage.setItem("customEmojis",JSON.stringify(customEmojis));
     localStorage.setItem("freqSettings",JSON.stringify(freqSettings));
+    localStorage.setItem("chatHistory",JSON.stringify(chatHistory)); // ✨ 实时本地化同步
 }
 
 function menu(){
@@ -342,6 +356,7 @@ function avatarChange(e,type){
         profile[type].avatar=r.result;
         renderProfile();
         saveAll();
+        renderChatFromHistory(); // 头像变了同步重刷一遍聊天视窗
     }
     r.readAsDataURL(f);
 }
@@ -353,7 +368,6 @@ function renderProfile(){
     if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
     if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
 
-    // 载入被动与主动的设定输入框
     document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
     document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
     document.getElementById('replyMaxMin').value = freqSettings.replyMaxMin || 1;
@@ -368,16 +382,15 @@ function saveProfile(){
     profile.partner.name=partnerName.value;
     saveAll();
     renderProfile();
+    renderChatFromHistory(); // 昵称变了同步重刷一遍
     alert("基础资料已保存");
 }
 
 function saveFrequencySettings() {
-    // 限制连发最大数
     let maxLines = parseInt(document.getElementById('maxComboLines').value) || 1;
     if (maxLines > 7) { alert("被动连发最大上限为7条"); maxLines = 7; }
     if (maxLines < 1) maxLines = 1;
 
-    // 限制主动最大条数
     let actLines = parseInt(document.getElementById('activeMaxLines').value) || 1;
     if (actLines > 3) { alert("主动发消息最多只能连续发3条哦"); actLines = 3; }
     if (actLines < 1) actLines = 1;
@@ -402,8 +415,80 @@ function saveFrequencySettings() {
     saveAll();
     renderProfile();
     alert("所有的频率控制参数已全部生效！");
+    resetActiveMessageTimer(); 
+}
 
-    resetActiveMessageTimer(); // 重新规划挂机倒计时
+// ✨ 将保存在数组里的离线历史记录一次性绘制到屏幕上 (支持刷新不丢失)
+function renderChatFromHistory() {
+    chat.innerHTML = "";
+    chatHistory.forEach(item => {
+        let d=document.createElement("div");
+        d.className="msg "+(item.side==="me"?"right":"");
+        let av=item.side==="me"?profile.me.avatar:profile.partner.avatar;
+        let name=item.side==="me"?profile.me.name:profile.partner.name;
+
+        let contentHtml = (item.isHtml) ? item.text : `<div class="bubble">${item.text}</div>`;
+        let statusHtml = '';
+        if (item.side === "me") {
+            statusHtml = `<span class="read-status ${item.status==='已读'?'read':'unread'}" id="${item.statusId}">${item.status}</span>`;
+        }
+
+        d.innerHTML=`
+        <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
+        <div class="msg-body">
+            <div class="small" style="text-align:${item.side==='me'?'right':'left'}">${name}</div>
+            <div class="bubble-container">
+                ${contentHtml}
+                ${statusHtml}
+            </div>
+        </div>
+        `;
+        chat.appendChild(d);
+    });
+    chat.scrollTop=chat.scrollHeight;
+}
+
+// ✨ 导出本地聊天历史数据为本地文件
+function exportChatHistory() {
+    if(!chatHistory || chatHistory.length === 0) { alert("目前还没有聊天历史可以导出哦。"); return; }
+    try {
+        let dataStr = JSON.stringify(chatHistory, null, 4);
+        let blob = new Blob([dataStr], { type: "application/json" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url; a.download = `chat_history_backup.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch(e) { alert("导出历史记录失败！"); }
+}
+
+// ✨ 导入聊天历史备份文件，瞬间还原聊天窗
+function importChatHistory(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            let importedHistory = JSON.parse(event.target.result);
+            if (Array.isArray(importedHistory)) {
+                chatHistory = importedHistory;
+                saveAll();
+                renderChatFromHistory();
+                alert(`成功导入恢复了 ${importedHistory.length} 条聊天记录！`);
+            } else { alert("导入失败：文件结构不符合聊天历史规范。"); }
+        } catch(err) { alert("解析文件失败，请确保导入的是合法的JSON备份。"); }
+        e.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ✨ 手动清除当前本地的所有聊天痕迹
+function clearChatHistory() {
+    if(confirm("确定要清空手机里的全部聊天历史记录吗？此操作不可逆哦！")) {
+        chatHistory = [];
+        saveAll();
+        renderChatFromHistory();
+    }
 }
 
 function openSystem(){
@@ -624,16 +709,29 @@ function sendMe(){
     sendBtn.style.display = 'none';
 }
 
+// ✨ 将每条真实生成的消息固化进持久化数组并更新 DOM
 function addMsg(side,text,isHtml=false){
+    let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
+    
+    // 构造历史存档对象
+    let msgObj = {
+        side: side,
+        text: text,
+        isHtml: isHtml,
+        statusId: uniqueStatusId,
+        status: '未读'
+    };
+    
+    chatHistory.push(msgObj);
+    saveAll(); // 立即存盘保存防止刷新中断
+
     let d=document.createElement("div");
     d.className="msg "+(side==="me"?"right":"");
     let av=side==="me"?profile.me.avatar:profile.partner.avatar;
     let name=side==="me"?profile.me.name:profile.partner.name;
 
     let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
-
     let statusHtml = '';
-    let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
 
     if (side === "me") {
         statusHtml = `<span class="read-status unread" id="${uniqueStatusId}">未读</span>`;
@@ -652,7 +750,6 @@ function addMsg(side,text,isHtml=false){
     chat.appendChild(d);
     chat.scrollTop=chat.scrollHeight;
 
-    // ✨ 只要你发了消息，就必须瞬间重置挂机主动发送的计时器，以你最新的发信时间重新开始算！
     if (side === "me") {
         resetActiveMessageTimer();
 
@@ -664,13 +761,17 @@ function addMsg(side,text,isHtml=false){
                 statusEl.classList.remove("unread");
                 statusEl.classList.add("read");
                 
+                // 同步更新持久化数组里的这条记录的状态
+                let target = chatHistory.find(h => h.statusId === uniqueStatusId);
+                if(target) target.status = '已读';
+                saveAll();
+
                 triggerAdvancedAutoReply();
             }
         }, randomDelay);
     }
 }
 
-// ✨ 重新配置规划系统主动找你的倒计时器
 function resetActiveMessageTimer() {
     if (activeMsgTimer) clearTimeout(activeMsgTimer);
 
@@ -685,7 +786,6 @@ function resetActiveMessageTimer() {
     }, randomTriggerDelay);
 }
 
-// ✨ 系统核心：主动触发连续消息骚扰你
 function triggerSystemActiveMessage() {
     let allCards = [];
     groups.forEach(g => {
@@ -693,7 +793,6 @@ function triggerSystemActiveMessage() {
     });
     if (allCards.length === 0) { resetActiveMessageTimer(); return; }
 
-    // 确定主动连续发几条气泡（受④限制，最大3条）
     let maxLinesAllowed = parseInt(freqSettings.activeMaxLines) || 2;
     if(maxLinesAllowed > 3) maxLinesAllowed = 3;
     if(maxLinesAllowed < 1) maxLinesAllowed = 1;
@@ -702,7 +801,7 @@ function triggerSystemActiveMessage() {
 
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
-        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; // 单个气泡混合1~3张
+        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; 
         let chosenCards = [];
         for (let c = 0; c < cardsInBubbleCount; c++) {
             let randomIndex = Math.floor(Math.random() * allCards.length);
@@ -711,14 +810,10 @@ function triggerSystemActiveMessage() {
         bubbleQueue.push(chosenCards.join('\n'));
     }
 
-    // 主动出击时，开始触发带打字状态的追发队列
-    sendQueueItem(bubbleQueue, 0, 1500); // 1.5秒的初次正在输入时间
-    
-    // 主动轰炸完毕后，立即部署下一轮循环等待
+    sendQueueItem(bubbleQueue, 0, 1500); 
     resetActiveMessageTimer();
 }
 
-// 被动触发函数：针对已读消息进行的恢复
 function triggerAdvancedAutoReply() {
     if (Math.random() < 0.1) {
         console.log("对方已读不回...");
@@ -731,17 +826,15 @@ function triggerAdvancedAutoReply() {
     });
     if (allCards.length === 0) return;
 
-    // 1. 确定本次被动发信气泡数 (1~7条)
     let userMaxLines = parseInt(freqSettings.maxComboLines) || 3;
     if(userMaxLines > 7) userMaxLines = 7;
     if(userMaxLines < 1) userMaxLines = 1;
 
     let bubbleCount = Math.floor(Math.random() * userMaxLines) + 1; 
 
-    // 2. 依次包装出气泡队列内容
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
-        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; // 1~3张
+        let cardsInBubbleCount = Math.floor(Math.random() * 3) + 1; 
         let chosenCards = [];
         for (let c = 0; c < cardsInBubbleCount; c++) {
             let randomIndex = Math.floor(Math.random() * allCards.length);
@@ -750,14 +843,12 @@ function triggerAdvancedAutoReply() {
         bubbleQueue.push(chosenCards.join('\n'));
     }
 
-    // 3. 计算设定好的回复随机间隔
     let minMs = (parseInt(freqSettings.replyMinSec) || 3) * 1000;
     let maxMs = (parseInt(freqSettings.replyMaxMin) || 1) * 60 * 1000;
     if (minMs > maxMs) { let tmp = minMs; minMs = maxMs; maxMs = tmp; }
     
     let firstMessageDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
 
-    // 4. 起航发射
     sendQueueItem(bubbleQueue, 0, firstMessageDelay);
 }
 
@@ -815,8 +906,9 @@ document.getElementById('txt').addEventListener('keydown', function(e) {
     }
 });
 
-// 初始化渲染并开启主动挂机计时器
+// 初始化阶段：载入资料、重绘历史聊天瀑布流、并开启挂机倒计时
 renderProfile();
+renderChatFromHistory();
 resetActiveMessageTimer();
 </script>
 </body>
