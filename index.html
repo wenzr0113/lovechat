@@ -153,7 +153,9 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 系统管理及弹窗样式 */
 .drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10;box-shadow:-2px 0 8px rgba(0,0,0,0.1)}
 .drawer.show{right:0}
-.item{padding:16px;border-bottom:1px solid #eee;cursor:pointer}
+.item{padding:16px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:8px;color:#333;font-size:15px}
+.item:active{background:#f5f5f5}
+
 .page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
 .page.show{left:0}
 .phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
@@ -222,46 +224,53 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
     </div>
 </div>
 
+<!-- 右侧抽屉菜单栏 -->
 <div class="drawer" id="drawer">
-<div class="item" onclick="openSystem()">⚙️ 系统设置</div>
-<div class="item" onclick="alert('功能开发中...')">💌 书信</div>
-<div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
+    <div class="item" onclick="openSystem()">⚙️ 系统设置</div>
+    <div class="item" onclick="openManageCards()">🃏 字卡管理</div>
+    <div class="item" onclick="alert('功能开发中...')">💌 书信</div>
+    <div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
-<!-- 系统设置页面 -->
+<!-- 1. 系统设置页面 (纯粹修改头像昵称) -->
 <div class="page" id="systemPage">
-<div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统</div></div>
-<div class="card">
-<h3>修改头像昵称</h3><br>
-<div>我的头像</div>
-<img id="meAvatarPreview" class="avatar"><br><br>
-<input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br><br>
-<div>我的昵称</div>
-<input type="text" id="meName"><br><br>
-<div>对方头像</div>
-<img id="partnerAvatarPreview" class="avatar"><br><br>
-<input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br><br>
-<div>对方昵称</div>
-<input type="text" id="partnerName"><br><br>
-<button onclick="saveProfile()">保存资料</button>
+    <div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统设置</div></div>
+    <div class="card">
+        <h3>修改头像昵称</h3><br>
+        <div>我的头像</div>
+        <img id="meAvatarPreview" class="avatar"><br><br>
+        <input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br><br>
+        <div>我的昵称</div>
+        <input type="text" id="meName"><br><br>
+        <div>对方头像</div>
+        <img id="partnerAvatarPreview" class="avatar"><br><br>
+        <input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br><br>
+        <div>对方昵称</div>
+        <input type="text" id="partnerName"><br><br>
+        <button onclick="saveProfile()">保存资料</button>
+    </div>
+    <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
-<div class="card">
-<h3>字卡管理</h3><br>
-<button onclick="addGroup()">新增分组</button>
-<button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
-<button onclick="exportJSON()">导出JSON文件</button>
-<input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
-<div id="groups"></div>
-</div>
-<div class="card"><button onclick="closeSystem()">返回聊天</button></div>
+<!-- 2. 字卡管理页面 (从系统设置独立挪出) -->
+<div class="page" id="manageCardsPage">
+    <div class="phead"><div class="back-btn" onclick="closeManageCards()">← 字卡管理</div></div>
+    <div class="card">
+        <h3>字卡库设置</h3><br>
+        <button onclick="addGroup()">新增分组</button>
+        <button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
+        <button onclick="exportJSON()">导出JSON文件</button>
+        <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
+        <div id="groups"></div>
+    </div>
+    <div class="card"><button onclick="closeManageCards()">返回聊天</button></div>
 </div>
 
-<!-- 字卡快捷展示回复 -->
+<!-- 3. 聊天中的字卡快捷回复弹窗 -->
 <div class="page" id="cardPage">
-<div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
-<div id="cardArea"></div>
-<div class="card"><button onclick="closeCards()">关闭</button></div>
+    <div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
+    <div id="cardArea"></div>
+    <div class="card"><button onclick="closeCards()">关闭</button></div>
 </div>
 
 <script>
@@ -309,14 +318,23 @@ renderProfile();
 alert("已保存");
 }
 
+/* 控制系统设置页面 */
 function openSystem(){
 systemPage.classList.add('show');
 drawer.classList.remove('show');
-renderGroups();
 }
-
 function closeSystem(){
 systemPage.classList.remove('show');
+}
+
+/* 控制独立的字卡管理页面 */
+function openManageCards(){
+manageCardsPage.classList.add('show');
+drawer.classList.remove('show');
+renderGroups();
+}
+function closeManageCards(){
+manageCardsPage.classList.remove('show');
 }
 
 function addGroup(){
@@ -556,22 +574,18 @@ if (side === "me") {
             statusEl.classList.remove("unread");
             statusEl.classList.add("read");
             
-            // 已读触发自动回复判断
             triggerAutoReply();
         }
     }, randomDelay);
 }
 }
 
-// ✨ 融入“正在输入”状态条的自动回复逻辑
 function triggerAutoReply() {
-    // 10% 的几率已读不回
     if (Math.random() < 0.1) {
         console.log("对方已读不回...");
         return; 
     }
 
-    // 收集当前字卡库里所有的卡片内容
     let allCards = [];
     groups.forEach(g => {
         if (g.cards && g.cards.length > 0) {
@@ -581,7 +595,6 @@ function triggerAutoReply() {
 
     if (allCards.length === 0) return;
 
-    // 随机决定本次回复几条字卡（1到4条之间）
     let maxAllowed = Math.min(4, allCards.length);
     let replyCount = Math.floor(Math.random() * maxAllowed) + 1;
 
@@ -594,25 +607,21 @@ function triggerAutoReply() {
 
     let combinedText = chosenCards.join('\n');
 
-    // ✨ 核心重点：状态一变为已读，顶部立刻显示“对方正在输入...”
     let typingEl = document.getElementById("typingStatus");
     if (typingEl) {
         typingEl.style.display = "inline-block";
     }
 
-    // 延迟 1 到 3 秒（模拟打字耗时），打完字发送出来并隐藏状态
     let typingDuration = Math.floor(Math.random() * 2000) + 1500; 
     setTimeout(function() {
-        // 发送对方的消息
         addMsg("other", combinedText);
-        
-        // 消息蹦出的瞬间，立刻隐藏顶部“正在输入...”
         if (typingEl) {
             typingEl.style.display = "none";
         }
     }, typingDuration);
 }
 
+/* 聊天时，点击加号面板里的“字卡回复”按钮弹出的快捷发送窗 */
 function openCards(){
 cardPage.classList.add('show');
 closeAllPanels();
@@ -626,7 +635,7 @@ html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer"
 if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
 html+='</div></div>';
 });
-cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先去系统设置</div>';
+cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先前往侧边栏【字卡管理】添加字卡</div>';
 }
 
 function sendCard(t){
