@@ -8,8 +8,13 @@
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-/* 头部样式 */
+/* 头部样式：确保标题区能够完美容纳昵称和动态输入状态 */
 .header{height:56px;background:#f7f7f7;display:flex;justify-content:space-between;align-items:center;padding:0 15px;border-bottom:1px solid #ddd;flex-shrink:0}
+.header-title-container{display:flex;align-items:center;gap:4px;font-size:16px;font-weight:500;color:#000;max-width:80%;overflow:hidden}
+#partnerTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 微信原生的轻微灰色输入提示字 */
+#typingStatus{font-size:14px;color:#666;font-weight:normal;white-space:nowrap}
+
 .header .menu-btn{font-size:20px;cursor:pointer;user-select:none;padding:5px}
 
 /* 聊天滚动区 */
@@ -24,13 +29,22 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .avatar:not([src]), .avatar[src=""] { opacity: 0; }
 
 /* 消息主体容器 */
-.msg-body{display:flex;flex-direction:column;max-width:calc(100% - 100px);margin-left:12px;margin-right:12px}
+.msg-body{display:flex;flex-direction:column;max-width:calc(100% - 100px);margin-left:12px;margin-right:12px;position:relative}
 .msg.right .msg-body{align-items:flex-end}
 
 /* 昵称样式 */
 .small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
 
 /* 完美还原微信气泡：4px微圆角、自适应大小、原生小尖尖 */
+.bubble-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+.msg.right .bubble-container {
+    flex-direction: row-reverse;
+}
+
 .bubble{
     padding: 10px 12px;
     border-radius: 4px;
@@ -72,6 +86,17 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     border-left: 5px solid #95ec69;
 }
 
+/* 阅读状态样式 */
+.read-status {
+    font-size: 11px;
+    user-select: none;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+.read-status.unread { color: #07c160; }
+.read-status.read { color: #b2b2b2; }
+
 /* 微信底部发送大容器 */
 .footer-container{background:#f7f7f7;border-top:1px solid #dddddd;flex-shrink:0;display:flex;flex-direction:column}
 .footer{padding:8px 10px;display:flex;align-items:center;gap:10px;height:54px}
@@ -79,7 +104,7 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 微信的原生文本框 */
 .footer textarea{flex:1;height:38px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
 
-/* ✨ 极致精修：高仿微信极细圆圈图标，保证大小相宜、绝对居中 */
+/* 高仿微信极细圆圈图标 */
 .footer-btn{
     width: 30px;
     height: 30px;
@@ -98,35 +123,15 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     transition: opacity 0.1s;
 }
 .footer-btn:active{opacity:0.5}
+.footer-btn.emoji-icon { font-size: 20px; line-height: 1; }
 
-/* 笑脸内嵌样式：微调字体大小与轴线确保居中 */
-.footer-btn.emoji-icon {
-    font-size: 20px;
-    line-height: 1;
-    text-indent: 0;
-}
-
-/* 加号内嵌样式：用纯 CSS 画一个精致的微信极细加号，完美解决字符不居中问题 */
-.footer-btn.plus-icon {
-    position: relative;
-}
+.footer-btn.plus-icon { position: relative; }
 .footer-btn.plus-icon::before,
 .footer-btn.plus-icon::after {
-    content: "";
-    position: absolute;
-    background-color: #555;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    content: ""; position: absolute; background-color: #555; top: 50%; left: 50%; transform: translate(-50%, -50%);
 }
-.footer-btn.plus-icon::before {
-    width: 14px;
-    height: 1.5px;
-}
-.footer-btn.plus-icon::after {
-    width: 1.5px;
-    height: 14px;
-}
+.footer-btn.plus-icon::before { width: 14px; height: 1.5px; }
+.footer-btn.plus-icon::after { width: 1.5px; height: 14px; }
 
 /* 微信风格发送按钮 */
 .send-btn-wechat{width:60px;height:34px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
@@ -170,12 +175,16 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 <body>
 
 <div class="header">
-<div id="partnerTitle">对方</div>
-<div class="menu-btn" onclick="menu()">☰</div>
+    <div class="header-title-container">
+        <div id="partnerTitle">对方</div>
+        <div id="typingStatus" style="display: none;">🔑 正在输入...</div>
+    </div>
+    <div class="menu-btn" onclick="menu()">☰</div>
 </div>
 
 <div class="chat" id="chat"></div>
 
+<!-- 底部控制栏 -->
 <div class="footer-container">
     <div class="footer">
         <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
@@ -219,6 +228,7 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 <div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
+<!-- 系统设置页面 -->
 <div class="page" id="systemPage">
 <div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统</div></div>
 <div class="card">
@@ -247,6 +257,7 @@ input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px;width:100
 <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
+<!-- 字卡快捷展示回复 -->
 <div class="page" id="cardPage">
 <div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
 <div id="cardArea"></div>
@@ -516,15 +527,90 @@ let name=side==="me"?profile.me.name:profile.partner.name;
 
 let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
 
+let statusHtml = '';
+let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
+
+if (side === "me") {
+    statusHtml = `<span class="read-status unread" id="${uniqueStatusId}">未读</span>`;
+}
+
 d.innerHTML=`
 <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
 <div class="msg-body">
     <div class="small" style="text-align:${side==='me'?'right':'left'}">${name}</div>
-    ${contentHtml}
+    <div class="bubble-container">
+        ${contentHtml}
+        ${statusHtml}
+    </div>
 </div>
 `;
 chat.appendChild(d);
 chat.scrollTop=chat.scrollHeight;
+
+if (side === "me") {
+    let randomDelay = Math.floor(Math.random() * (60 - 3 + 1) + 3) * 1000;
+    setTimeout(function() {
+        let statusEl = document.getElementById(uniqueStatusId);
+        if (statusEl) {
+            statusEl.innerText = "已读";
+            statusEl.classList.remove("unread");
+            statusEl.classList.add("read");
+            
+            // 已读触发自动回复判断
+            triggerAutoReply();
+        }
+    }, randomDelay);
+}
+}
+
+// ✨ 融入“正在输入”状态条的自动回复逻辑
+function triggerAutoReply() {
+    // 10% 的几率已读不回
+    if (Math.random() < 0.1) {
+        console.log("对方已读不回...");
+        return; 
+    }
+
+    // 收集当前字卡库里所有的卡片内容
+    let allCards = [];
+    groups.forEach(g => {
+        if (g.cards && g.cards.length > 0) {
+            allCards = allCards.concat(g.cards);
+        }
+    });
+
+    if (allCards.length === 0) return;
+
+    // 随机决定本次回复几条字卡（1到4条之间）
+    let maxAllowed = Math.min(4, allCards.length);
+    let replyCount = Math.floor(Math.random() * maxAllowed) + 1;
+
+    let chosenCards = [];
+    let tempCards = [...allCards];
+    for (let i = 0; i < replyCount; i++) {
+        let randomIndex = Math.floor(Math.random() * tempCards.length);
+        chosenCards.push(tempCards.splice(randomIndex, 1)[0]);
+    }
+
+    let combinedText = chosenCards.join('\n');
+
+    // ✨ 核心重点：状态一变为已读，顶部立刻显示“对方正在输入...”
+    let typingEl = document.getElementById("typingStatus");
+    if (typingEl) {
+        typingEl.style.display = "inline-block";
+    }
+
+    // 延迟 1 到 3 秒（模拟打字耗时），打完字发送出来并隐藏状态
+    let typingDuration = Math.floor(Math.random() * 2000) + 1500; 
+    setTimeout(function() {
+        // 发送对方的消息
+        addMsg("other", combinedText);
+        
+        // 消息蹦出的瞬间，立刻隐藏顶部“正在输入...”
+        if (typingEl) {
+            typingEl.style.display = "none";
+        }
+    }, typingDuration);
 }
 
 function openCards(){
@@ -537,7 +623,7 @@ html+=`<div class="card"><h3>${g.name} (${g.cards.length})</h3>
 g.cards.forEach(c=>{
 html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
 });
-if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">暂无字卡</div>`;
+if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
 html+='</div></div>';
 });
 cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先去系统设置</div>';
