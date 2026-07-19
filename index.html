@@ -197,7 +197,7 @@ button{cursor:pointer;padding:6px 12px;border:1px solid #ccc;background:#fff;bor
 button.primary-btn {background:#07c160;color:#fff;border-color:#07c160;font-weight:bold}
 button.primary-btn:active {background:#06ad56}
 
-/* 仿高保真图片样式设计 */
+/* 高保真系统频率控制样式 */
 .img-style-title { font-size:14px; color:#9a9a9a; margin:15px 10px 8px 10px; font-weight:normal; }
 .img-style-box { background:#fff; border-radius:14px; margin:0 10px 15px 10px; border:1px solid #f0f0f0; overflow:hidden; }
 .img-style-row { display:flex; align-items:center; justify-content:space-between; padding:15px; position:relative; min-height:55px; }
@@ -206,11 +206,9 @@ button.primary-btn:active {background:#06ad56}
 .img-style-left-icon { width:32px; height:32px; background:#f5ece3; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
 .img-style-right-val { font-size:14px; color:#c1a07d; min-width:55px; text-align:right; }
 
-/* 仿图纯正滑块 */
 .img-style-slider { flex:1; margin:0 15px; -webkit-appearance:none; appearance:none; height:4px; background:#f0f0f0; border-radius:2px; outline:none; }
 .img-style-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:#c1a07d; box-shadow:0 2px 6px rgba(193,160,125,0.4); cursor:pointer; }
 
-/* 仿图优雅开关 */
 .img-style-switch { position:relative; width:52px; height:30px; -webkit-appearance:none; appearance:none; background:#e4e4e4; border-radius:15px; outline:none; cursor:pointer; transition:background 0.2s; }
 .img-style-switch:checked { background:#c1a07d; }
 .img-style-switch::before { content:""; position:absolute; width:26px; height:26px; border-radius:50%; background:#fff; top:2px; left:2px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
@@ -322,7 +320,6 @@ button.primary-btn:active {background:#06ad56}
         </div>
     </div>
 
-    <!-- 原有配置隐藏保存，联动滑动条 -->
     <div class="card" style="padding: 10px; margin-top:0;">
         <div class="card-label" style="margin-top:0;">对方最大连发数量 (1-7条)</div>
         <input type="number" id="maxComboLines" class="wechat-input" min="1" max="7" placeholder="3">
@@ -385,8 +382,7 @@ button.primary-btn:active {background:#06ad56}
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
-// 默认频率参数初始化扩展
-let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1.5,"activeMinSec":30,"activeMaxMin":5,"activeMaxLines":2,"activeToggle":true,"mergeCardsToggle":true}');
+let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1.5,"activeMaxMin":5,"activeToggle":true,"mergeCardsToggle":true}');
 let chatHistory=JSON.parse(localStorage.getItem('chatHistory')||'[]');
 
 let openGroupIds=[];
@@ -434,7 +430,6 @@ function renderProfile(){
     if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
     if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
 
-    // 滑动条组件数值载入
     document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
     
     document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
@@ -469,11 +464,10 @@ function saveFrequencySettings() {
     
     saveAll();
     renderProfile();
-    alert("频率控制设置已全部完美生效！");
+    alert("频率控制设置已全部保存成功！");
     resetActiveMessageTimer(); 
 }
 
-// 格式化时间的全局轻量函数
 function getFormattedTime() {
     let now = new Date();
     let hh = String(now.getHours()).padStart(2, '0');
@@ -495,7 +489,6 @@ function renderChatFromHistory() {
             statusHtml = `<span class="read-status ${item.status==='已读'?'read':'unread'}" id="${item.statusId}">${item.status}</span>`;
         }
         
-        // 如果数据里没有存时间，默认不展示或给个缺省
         let timeDisplayHtml = item.time ? `<div class="msg-time">${item.time}</div>` : '';
 
         d.innerHTML=`
@@ -786,7 +779,7 @@ function sendMe(){
 
 function addMsg(side,text,isHtml=false){
     let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
-    let currentTimeString = getFormattedTime(); // 每条消息捕获时间
+    let currentTimeString = getFormattedTime();
     
     let msgObj = {
         side: side,
@@ -849,8 +842,6 @@ function addMsg(side,text,isHtml=false){
 
 function resetActiveMessageTimer() {
     if (activeMsgTimer) clearTimeout(activeMsgTimer);
-    
-    // 如果关闭了主动发送开关，则不再挂载定时触发器
     if (freqSettings.activeToggle === false) return;
 
     let intervalMinutes = parseFloat(freqSettings.activeMaxMin) || 5;
@@ -870,13 +861,12 @@ function triggerSystemActiveMessage() {
     });
     if (allCards.length === 0) { resetActiveMessageTimer(); return; }
 
-    let maxLinesAllowed = parseInt(freqSettings.activeMaxLines) || 2;
-    
-    // 联动拼字卡开关：如果开启了则按原概率随机多条合并发送，关闭则强制单发一条
-    let bubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * maxLinesAllowed) + 1) : 1;
+    // 主动发送的气泡数限制为 1 ~ 3 之间的随机数
+    let bubbleCount = Math.floor(Math.random() * 3) + 1;
 
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
+        // 拼字卡启用时：单气泡随机拼接 1 到 3 张字卡（1为不拼）；关闭时：固定拼接 1 张字卡
         let cardsInBubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * 3) + 1) : 1; 
         let chosenCards = [];
         for (let c = 0; c < cardsInBubbleCount; c++) {
@@ -899,13 +889,13 @@ function triggerAdvancedAutoReply() {
     });
     if (allCards.length === 0) return;
 
+    // 对方回你时：随机生成 1 到设定最大上限（如3）个气泡数量
     let userMaxLines = parseInt(freqSettings.maxComboLines) || 3;
-    
-    // 回复连发同样受拼字卡开关约束
-    let bubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * userMaxLines) + 1) : 1; 
+    let bubbleCount = Math.floor(Math.random() * userMaxLines) + 1; 
 
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
+        // 拼字卡启用时：单气泡随机拼接 1 到 3 张字卡（1代表不拼，2或3代表拼在一起）；关闭时固定为 1 张
         let cardsInBubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * 3) + 1) : 1; 
         let chosenCards = [];
         for (let c = 0; c < cardsInBubbleCount; c++) {
@@ -929,7 +919,7 @@ function sendQueueItem(queue, index, delayTime) {
 
     setTimeout(function() {
         let typingEl = document.getElementById("typingStatus");
-        if (typingEl) typingEl.style.display = "inline-block"; // 触发顶部居中输入状态
+        if (typingEl) typingEl.style.display = "inline-block";
 
         let processTypingTime = (index === 0) ? Math.min(delayTime, 2000) : (Math.floor(Math.random() * 1500) + 1000);
 
