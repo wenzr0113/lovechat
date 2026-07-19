@@ -34,7 +34,7 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 /* 昵称样式 */
 .small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
 
-/* 气泡外层包裹，支持排列 */
+/* 气泡外层包裹 */
 .bubble-container {
     display: flex;
     align-items: flex-end;
@@ -45,22 +45,17 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
     flex-direction: row-reverse;
 }
 
-/* 🌟 严格对齐微信气泡换行逻辑 🌟 */
+/* 严格对齐微信气泡换行逻辑 */
 .bubble{
     padding: 10px 12px;
     border-radius: 4px;
     background: #fff;
     color: #000;
-    
-    /* 核心修复：文字不折行尽量往右撑，直到达到最大限制 */
     display: inline-block;
     width: fit-content;
-    max-width: 260px; /* ✨ 限制气泡最大宽度，到了这个距离才会换行 */
-    
-    /* 智能中文物理换行，保证不提前乱断开 */
+    max-width: 260px;
     word-break: break-all; 
     white-space: pre-wrap;
-    
     line-height: 1.4;
     font-size: 15px;
     position: relative;
@@ -150,12 +145,14 @@ body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow
 .emoji-item{width:65px;height:65px;border-radius:4px;object-fit:cover;cursor:pointer;background:#eee;flex-shrink:0;display:inline-block}
 .add-emoji-btn{width:65px;height:65px;border-radius:4px;border:2px dashed #bbb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;color:#999;cursor:pointer;flex-shrink:0;user-select:none}
 
-/* 系统管理及弹窗样式 */
+/* 右侧抽屉菜单栏 */
 .drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10;box-shadow:-2px 0 8px rgba(0,0,0,0.1)}
 .drawer.show{right:0}
+.drawer-back{background:#f7f7f7;font-weight:bold;border-bottom:1px solid #ddd;color:#555}
 .item{padding:16px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:8px;color:#333;font-size:15px}
 .item:active{background:#f5f5f5}
 
+/* 系统管理及弹窗样式页面 */
 .page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
 .page.show{left:0}
 .phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
@@ -202,16 +199,18 @@ button.primary-btn:active {background:#06ad56}
         <div id="partnerTitle">对方</div>
         <div id="typingStatus" style="display: none;">对方正在输入...</div>
     </div>
-    <div class="menu-btn" onclick="menu()">☰</div>
+    <div class="menu-btn" onclick="menu(event)">☰</div>
 </div>
 
-<div class="chat" id="chat"></div>
+<!-- 绑定点击事件，当点击聊天框任意非功能区域时，自动缩回菜单栏 -->
+<div class="chat" id="chat" onclick="closeMenu()"></div>
 
-<div class="footer-container">
+<!-- 底部控制栏 -->
+<div class="footer-container" onclick="closeMenu()">
     <div class="footer">
-        <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji')">☺</button>
-        <textarea id="txt" placeholder="" rows="1" oninput="handleInput(this)" onclick="closeAllPanels()"></textarea>
-        <button class="footer-btn plus-icon" id="plusToggleBtn" onclick="togglePanel('plus')"></button>
+        <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji'); event.stopPropagation();">☺</button>
+        <textarea id="txt" placeholder="" rows="1" oninput="handleInput(this)" onclick="closeAllPanels(); closeMenu();"></textarea>
+        <button class="footer-btn plus-icon" id="plusToggleBtn" onclick="togglePanel('plus'); event.stopPropagation();"></button>
         <button class="send-btn-wechat" id="sendBtn" onclick="sendMe()">发送</button>
     </div>
 
@@ -244,13 +243,16 @@ button.primary-btn:active {background:#06ad56}
     </div>
 </div>
 
+<!-- 右侧抽屉菜单栏（新增顶部返回栏） -->
 <div class="drawer" id="drawer">
+    <div class="item drawer-back" onclick="closeMenu()">← 返回聊天</div>
     <div class="item" onclick="openSystem()">⚙️ 系统设置</div>
     <div class="item" onclick="openManageCards()">🃏 字卡管理</div>
     <div class="item" onclick="alert('功能开发中...')">💌 书信</div>
     <div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
+<!-- 1. 系统设置页面 -->
 <div class="page" id="systemPage">
     <div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统设置</div></div>
     
@@ -271,29 +273,23 @@ button.primary-btn:active {background:#06ad56}
 
     <div class="card">
         <h3>⚙️ 系统频率控制</h3>
-        
         <div class="card-label">① 对方连发最大条数 (被动回复，1-7条)</div>
         <input type="number" id="maxComboLines" class="wechat-input" min="1" max="7" placeholder="3">
-        
         <div class="card-label">② 聊天回复最快(秒) ~ 最慢(分钟)</div>
         <div class="input-row">
             <input type="number" id="replyMinSec" class="wechat-input" min="0" placeholder="最快 (秒)">
             <span style="color:#aaa;">~</span>
             <input type="number" id="replyMaxMin" class="wechat-input" min="0" placeholder="最慢 (分钟)">
         </div>
-
         <hr style="border:none; border-top:1px dashed #eee; margin:15px 0;">
-
         <div class="card-label">③ 随机发消息最快(秒) ~ 最慢(分钟) (系统主动挂机发送)</div>
         <div class="input-row">
             <input type="number" id="activeMinSec" class="wechat-input" min="0" placeholder="主动最快 (秒)">
             <span style="color:#aaa;">~</span>
             <input type="number" id="activeMaxMin" class="wechat-input" min="0" placeholder="主动最慢 (分钟)">
         </div>
-
         <div class="card-label">④ 主动发消息最多条数 (1-3条)</div>
         <input type="number" id="activeMaxLines" class="wechat-input" min="1" max="3" placeholder="2">
-        
         <br><br>
         <button class="primary-btn" onclick="saveFrequencySettings()">保存频率设置</button>
     </div>
@@ -313,6 +309,7 @@ button.primary-btn:active {background:#06ad56}
     <div class="card"><button onclick="closeSystem()">返回聊天</button></div>
 </div>
 
+<!-- 2. 字卡管理页面 -->
 <div class="page" id="manageCardsPage">
     <div class="phead"><div class="back-btn" onclick="closeManageCards()">← 字卡管理</div></div>
     <div class="card">
@@ -327,6 +324,7 @@ button.primary-btn:active {background:#06ad56}
     <div class="card"><button onclick="closeManageCards()">返回聊天</button></div>
 </div>
 
+<!-- 3. 聊天中的字卡快捷回复弹窗 -->
 <div class="page" id="cardPage">
     <div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
     <div id="cardArea"></div>
@@ -352,8 +350,13 @@ function saveAll(){
     localStorage.setItem("chatHistory",JSON.stringify(chatHistory)); 
 }
 
-function menu(){
+function menu(event){
+    event.stopPropagation(); // 阻止冒泡，避免触发 body/chat 的关闭事件
     document.getElementById('drawer').classList.toggle('show');
+}
+
+function closeMenu(){
+    document.getElementById('drawer').classList.remove('show');
 }
 
 function avatarChange(e,type){
@@ -497,7 +500,7 @@ function clearChatHistory() {
 
 function openSystem(){
     systemPage.classList.add('show');
-    drawer.classList.remove('show');
+    closeMenu();
     renderProfile();
 }
 function closeSystem(){
@@ -506,7 +509,7 @@ function closeSystem(){
 
 function openManageCards(){
     manageCardsPage.classList.add('show');
-    drawer.classList.remove('show');
+    closeMenu();
     renderGroups();
 }
 function closeManageCards(){
