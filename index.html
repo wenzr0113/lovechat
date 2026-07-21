@@ -2,240 +2,391 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>情侣聊天-系统版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>iMessage 风格聊天</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-body{background:#ededed;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif}
+body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:#000}
 
-/* 头部样式：绝对定位及居中排版 */
-.header{height:56px;background:#f7f7f7;display:flex;align-items:center;padding:0 15px;border-bottom:1px solid #ddd;flex-shrink:0;position:relative}
-.header-title-container{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:60%}
-#partnerTitle{font-size:16px;font-weight:500;color:#000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#typingStatus{font-size:12px;color:#666;font-weight:normal;white-space:nowrap;margin-top:2px}
-.header .menu-btn{font-size:20px;cursor:pointer;user-select:none;padding:5px;position:absolute;right:15px;top:13px}
+/* iMessage 顶栏 */
+.header{
+    height: 60px;
+    background: rgba(249, 249, 249, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+    z-index: 5;
+}
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.header-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #e5e5ea;
+    margin-bottom: 2px;
+}
+.header-avatar:not([src]), .header-avatar[src=""] { opacity: 0; }
+#partnerTitle {
+    font-size: 11px;
+    color: #8e8e93;
+    font-weight: 400;
+}
+#partnerNameHeader {
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
+    line-height: 1.1;
+}
+.menu-btn {
+    font-size: 20px;
+    color: #007aff;
+    cursor: pointer;
+    user-select: none;
+}
 
-/* 聊天滚动区 */
-.chat{flex:1;overflow-y:auto;padding:15px 12px;background:#ededed}
+/* 聊天主体区域 */
+.chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 12px 20px 12px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+}
 
-/* 微信原生消息流排版 */
-.msg{display:flex;margin-bottom:16px;align-items:flex-start}
-.msg.right{flex-direction:row-reverse}
+/* iMessage 消息流 */
+.msg {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: flex-end;
+    position: relative;
+}
+.msg.right {
+    flex-direction: row-reverse;
+}
 
-/* 头像：微信标准 40x40 略带小圆角 */
-.avatar{width:40px;height:40px;border-radius:4px;object-fit:cover;background:#ccc;flex-shrink:0}
-.avatar:not([src]), .avatar[src=""] { opacity: 0; }
+.msg-body {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+    position: relative;
+}
+.msg.right .msg-body {
+    align-items: flex-end;
+}
 
-/* 消息主体容器 */
-.msg-body{display:flex;flex-direction:column;max-width:calc(100% - 100px);margin-left:12px;margin-right:12px;position:relative}
-.msg.right .msg-body{align-items:flex-end}
-
-/* 昵称样式 */
-.small{font-size:11px;color:#888;margin-bottom:4px;line-height:1}
-
-/* 气泡外层包裹 */
 .bubble-container {
     display: flex;
     align-items: flex-end;
     gap: 6px;
-    width: 100%;
+    position: relative;
 }
 .msg.right .bubble-container {
     flex-direction: row-reverse;
 }
 
-/* 严格对齐微信气泡换行逻辑 */
-.bubble{
-    padding: 10px 12px;
-    border-radius: 4px;
-    background: #fff;
+/* iMessage 经典气泡 */
+.bubble {
+    padding: 8px 14px;
+    border-radius: 18px;
+    background: #e9e9eb;
     color: #000;
-    display: inline-block;
-    width: fit-content;
-    max-width: 260px;
-    word-break: break-all; 
+    font-size: 16px;
+    line-height: 1.35;
+    word-break: break-word;
     white-space: pre-wrap;
-    line-height: 1.4;
-    font-size: 15px;
     position: relative;
-    box-shadow: none;
+    max-width: 100%;
 }
 
-.msg:not(.right) .bubble::before {
-    content: "";
+/* 发送方蓝色气泡 */
+.msg.right .bubble {
+    background: #007aff;
+    color: #fff;
+}
+
+/* 气泡尾巴 (SVG 绘制圆滑尾巴) */
+.tail {
     position: absolute;
-    top: 14px;
-    left: -5px;
-    width: 0;
-    height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-right: 5px solid #fff;
+    bottom: 0;
+    width: 15px;
+    height: 18px;
+}
+.msg:not(.right) .tail {
+    left: -6px;
+    fill: #e9e9eb;
+}
+.msg.right .tail {
+    right: -6px;
+    fill: #007aff;
+    transform: scaleX(-1);
 }
 
-.msg.right .bubble{background:#95ec69}
-.msg.right .bubble::before {
-    content: "";
-    position: absolute;
-    top: 14px;
-    right: -5px;
-    width: 0;
-    height: 0;
-    border-top: 5px solid transparent;
-    border-bottom: 5px solid transparent;
-    border-left: 5px solid #95ec69;
-}
-
-/* 阅读状态与底部分支时间样式 */
+/* 状态标记：勾选符号（单勾未读、双勾已读） */
 .read-status {
-    font-size: 11px;
-    user-select: none;
+    font-size: 13px;
     margin-bottom: 2px;
     white-space: nowrap;
-    transition: color 0.3s ease;
+    font-weight: bold;
+    user-select: none;
 }
-.read-status.unread { color: #07c160; }
-.read-status.read { color: #b2b2b2; }
+.read-status.unread {
+    color: #8e8e93; /* 未读：灰色单勾 */
+}
+.read-status.read {
+    color: #007aff; /* 已读：蓝色双勾 */
+    letter-spacing: -3px; /* 紧凑排列形成双勾效果 */
+    margin-right: 3px;
+}
 
 .msg-time {
     font-size: 10px;
-    color: #aaa;
-    margin-top: 4px;
-    user-select: none;
+    color: #c7c7cc;
+    margin-top: 3px;
+    text-align: right;
+}
+.msg:not(.right) .msg-time {
+    text-align: left;
 }
 
-/* 微信底部发送大容器 */
-.footer-container{background:#f7f7f7;border-top:1px solid #dddddd;flex-shrink:0;display:flex;flex-direction:column}
-.footer{padding:8px 10px;display:flex;align-items:center;gap:10px;height:54px}
-.footer textarea{flex:1;height:38px;background:#fff;border:none;border-radius:4px;padding:9px 10px;font-size:16px;line-height:20px;resize:none;outline:none;font-family:inherit}
-
-.footer-btn{
-    width: 30px;
-    height: 30px;
+/* 正在输入中——三点浮动气泡样式 */
+.typing-bubble {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 12px 16px;
+    min-width: 56px;
+    height: 36px;
+}
+.typing-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #8e8e93;
     border-radius: 50%;
-    border: 1.2px solid #555;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    40% {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
+/* iMessage 悬浮输入栏 */
+.footer-container {
+    background: rgba(249, 249, 249, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 0.5px solid rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+}
+.footer {
+    padding: 8px 12px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    min-height: 52px;
+}
+
+.input-wrapper {
+    flex: 1;
+    border: 1px solid #c6c6c8;
+    background: #fff;
+    border-radius: 20px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    max-height: 120px;
+}
+.input-wrapper textarea {
+    flex: 1;
+    border: none;
+    outline: none;
     background: transparent;
+    font-size: 16px;
+    line-height: 20px;
+    resize: none;
+    max-height: 100px;
+}
+
+.btn-icon-ios {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #e9e9eb;
+    color: #007aff;
+    font-size: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    padding: 0;
-    margin: 0;
-    user-select: none;
-    outline: none;
 }
-.footer-btn:active{opacity:0.5}
-.footer-btn.emoji-icon { font-size: 20px; line-height: 1; }
-.footer-btn.plus-icon { position: relative; }
-.footer-btn.plus-icon::before,
-.footer-btn.plus-icon::after {
-    content: ""; position: absolute; background-color: #555; top: 50%; left: 50%; transform: translate(-50%, -50%);
+.btn-icon-ios:active { opacity: 0.6; }
+
+.send-btn-ios {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #007aff;
+    border: none;
+    color: #fff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-bottom: 2px;
 }
-.footer-btn.plus-icon::before { width: 14px; height: 1.5px; }
-.footer-btn.plus-icon::after { width: 1.5px; height: 14px; }
+.send-btn-ios svg { width: 14px; height: 14px; fill: #fff; }
 
-.send-btn-wechat{width:60px;height:34px;background:#07c160;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:bold;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.send-btn-wechat:active{background:#06ad56}
-
-/* 功能面板区 */
-.panel-box{height:0;overflow:hidden;background:#f7f7f7;border-top:0 solid #ddd;transition:height 0.15s ease}
-.panel-box.show{height:115px;border-top:1px solid #ddd}
-
-.plus-panel{display:flex;gap:20px;padding:15px 20px;overflow-x:auto}
-.panel-item{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#666;flex-shrink:0}
-.panel-icon{width:52px;height:52px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid rgba(0,0,0,0.05)}
-.panel-icon:active{background:#eaeaea}
-
-.emoji-panel{padding:10px;display:flex;gap:12px;overflow-x:auto;white-space:nowrap;height:100%;align-items:center}
-.emoji-item{width:65px;height:65px;border-radius:4px;object-fit:cover;cursor:pointer;background:#eee;flex-shrink:0;display:inline-block}
-.add-emoji-btn{width:65px;height:65px;border-radius:4px;border:2px dashed #bbb;background:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;color:#999;cursor:pointer;flex-shrink:0;user-select:none}
-
-/* 右侧抽屉菜单栏 */
-.drawer{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;transition:.3s;z-index:10;box-shadow:-2px 0 8px rgba(0,0,0,0.1)}
-.drawer.show{right:0}
-.drawer-back{background:#f7f7f7;font-weight:bold;border-bottom:1px solid #ddd;color:#555}
-.item{padding:16px;border-bottom:1px solid #eee;cursor:pointer;display:flex;align-items:center;gap:8px;color:#333;font-size:15px}
-.item:active{background:#f5f5f5}
-
-/* 系统管理及弹窗样式页面 */
-.page{position:fixed;left:100%;top:0;width:100%;height:100%;background:#f5f5f5;transition:.3s;overflow:auto;z-index:20}
-.page.show{left:0}
-.phead{background:#f7f7f7;color:#333;height:50px;display:flex;align-items:center;padding:0 10px;border-bottom:1px solid #ddd;font-weight:bold}
-.back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;padding:8px;border-radius:4px;user-select:none}
-
-/* 卡片与排版 */
-.card{background:#fff;margin:10px;padding:15px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
-.card h3 {font-size:15px;color:#333;display:flex;align-items:center;gap:6px;margin-bottom:12px}
-.card-label {font-size:13px;color:#666;margin-bottom:6px;margin-top:10px}
-
-.wechat-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    background: #fcfcfc;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
+/* 展开功能面板 */
+.panel-box {
+    height: 0;
+    overflow: hidden;
+    background: #f2f2f7;
+    transition: height 0.2s ease-out;
 }
-.wechat-input:focus { border-color: #07c160; }
+.panel-box.show {
+    height: 120px;
+    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+.plus-panel {
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+    overflow-x: auto;
+}
+.panel-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #8e8e93;
+}
+.panel-icon {
+    width: 52px;
+    height: 52px;
+    background: #fff;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
 
-.input-row { display: flex; gap: 10px; align-items: center; }
-.input-row .wechat-input { flex: 1; }
+.emoji-panel {
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    align-items: center;
+    height: 100%;
+}
+.add-emoji-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    border: 2px dashed #c7c7cc;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #8e8e93;
+    cursor: pointer;
+}
 
-.group{border:1px solid #ddd;margin:10px 0;border-radius:6px;background:#fff;overflow:hidden}
-.group-header{background:#f9f9f9;padding:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.group-title{font-weight:bold;display:flex;align-items:center;gap:6px}
-.group-arrow{transition: transform 0.2s;font-size:12px;color:#999}
-.group.open .group-arrow{transform: rotate(90deg)}
-.group-content{display:none;padding:8px;border-top:1px solid #eee}
-.group.open .group-content{display:block}
-.card-list{max-height:180px;overflow-y:auto;margin-top:6px}
-.card-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f5f5f5}
-button{cursor:pointer;padding:6px 12px;border:1px solid #ccc;background:#fff;border-radius:6px;font-size:13px}
-button.primary-btn {background:#07c160;color:#fff;border-color:#07c160;font-weight:bold}
-button.primary-btn:active {background:#06ad56}
+/* 抽屉菜单与设置页面 */
+.drawer { position: fixed; right: -300px; top: 0; width: 300px; height: 100%; background: #fff; transition: .3s; z-index: 100; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+.drawer.show { right: 0; }
+.drawer-back { background: #f2f2f7; font-weight: 600; color: #007aff; }
+.item { padding: 16px; border-bottom: 0.5px solid #e5e5ea; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; }
 
-/* 高保真系统频率控制样式 */
-.img-style-title { font-size:14px; color:#9a9a9a; margin:15px 10px 8px 10px; font-weight:normal; }
-.img-style-box { background:#fff; border-radius:14px; margin:0 10px 15px 10px; border:1px solid #f0f0f0; overflow:hidden; }
-.img-style-row { display:flex; align-items:center; justify-content:space-between; padding:15px; position:relative; min-height:55px; }
-.img-style-row:not(:last-child)::after { content:""; position:absolute; left:15px; right:15px; bottom:0; height:1px; background:#f5f5f5; }
-.img-style-left { display:flex; align-items:center; gap:12px; font-size:15px; color:#2c2c2c; }
-.img-style-left-icon { width:32px; height:32px; background:#f5ece3; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; }
-.img-style-right-val { font-size:14px; color:#c1a07d; min-width:55px; text-align:right; }
+.page { position: fixed; left: 100%; top: 0; width: 100%; height: 100%; background: #f2f2f7; transition: .3s; overflow: auto; z-index: 200; }
+.page.show { left: 0; }
+.phead { background: rgba(249, 249, 249, 0.94); height: 50px; display: flex; align-items: center; padding: 0 10px; border-bottom: 0.5px solid #c6c6c8; font-weight: 600; color: #007aff; }
+.back-btn { cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 4px; }
 
-.img-style-slider { flex:1; margin:0 15px; -webkit-appearance:none; appearance:none; height:4px; background:#f0f0f0; border-radius:2px; outline:none; }
-.img-style-slider::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:#c1a07d; box-shadow:0 2px 6px rgba(193,160,125,0.4); cursor:pointer; }
+.card { background: #fff; margin: 12px; padding: 16px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.card h3 { font-size: 16px; margin-bottom: 12px; }
+.card-label { font-size: 13px; color: #8e8e93; margin: 10px 0 4px 0; }
+.ios-input { width: 100%; padding: 10px 12px; border: 1px solid #c6c6c8; border-radius: 10px; font-size: 15px; outline: none; }
+.ios-input:focus { border-color: #007aff; }
 
-.img-style-switch { position:relative; width:52px; height:30px; -webkit-appearance:none; appearance:none; background:#e4e4e4; border-radius:15px; outline:none; cursor:pointer; transition:background 0.2s; }
-.img-style-switch:checked { background:#c1a07d; }
-.img-style-switch::before { content:""; position:absolute; width:26px; height:26px; border-radius:50%; background:#fff; top:2px; left:2px; transition:transform 0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.15); }
-.img-style-switch:checked::before { transform:translateX(22px); }
+.img-style-title { font-size: 13px; color: #6c6c70; margin: 16px 16px 6px 16px; text-transform: uppercase; }
+.img-style-box { background: #fff; border-radius: 12px; margin: 0 12px 12px 12px; overflow: hidden; }
+.img-style-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid #e5e5ea; min-height: 48px; }
+.img-style-row:last-child { border-bottom: none; }
+.img-style-slider { flex: 1; margin: 0 12px; -webkit-appearance: none; height: 3px; background: #e5e5ea; border-radius: 2px; }
+.img-style-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer; }
+.img-style-switch { width: 51px; height: 31px; -webkit-appearance: none; background: #e9e9eb; border-radius: 16px; position: relative; outline: none; cursor: pointer; transition: background 0.2s; }
+.img-style-switch:checked { background: #34c759; }
+.img-style-switch::before { content: ""; position: absolute; width: 27px; height: 27px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.img-style-switch:checked::before { transform: translateX(20px); }
+
+button { padding: 8px 16px; border-radius: 8px; border: 1px solid #c6c6c8; background: #fff; font-size: 14px; cursor: pointer; }
+button.primary-btn { background: #007aff; color: #fff; border: none; font-weight: 600; }
 </style>
 </head>
 <body>
 
+<!-- 头部 -->
 <div class="header">
-    <div class="header-title-container">
-        <div id="partnerTitle">对方</div>
-        <div id="typingStatus" style="display: none;">对方正在输入...</div>
+    <div style="width:30px;"></div>
+    <div class="header-center" onclick="openSystem()">
+        <img id="headerAvatar" class="header-avatar">
+        <div id="partnerNameHeader">对方</div>
+        <div id="partnerTitle">iMessage</div>
     </div>
-    <div class="menu-btn" onclick="menu(event)">☰</div>
+    <div class="menu-btn" onclick="menu(event)">⋯</div>
 </div>
 
+<!-- 消息区 -->
 <div class="chat" id="chat" onclick="closeMenu()"></div>
 
-<!-- 底部控制栏 -->
+<!-- 底部发送栏 -->
 <div class="footer-container" onclick="closeMenu()">
     <div class="footer">
-        <button class="footer-btn emoji-icon" id="emojiToggleBtn" onclick="togglePanel('emoji'); event.stopPropagation();">☺</button>
-        <textarea id="txt" placeholder="" rows="1" oninput="handleInput(this)" onclick="closeAllPanels(); closeMenu();"></textarea>
-        <button class="footer-btn plus-icon" id="plusToggleBtn" onclick="togglePanel('plus'); event.stopPropagation();"></button>
-        <button class="send-btn-wechat" id="sendBtn" onclick="sendMe()">发送</button>
+        <button class="btn-icon-ios" onclick="togglePanel('plus'); event.stopPropagation();">+</button>
+        <button class="btn-icon-ios" id="emojiToggleBtn" onclick="togglePanel('emoji'); event.stopPropagation();" style="font-size: 18px;">☺</button>
+        <div class="input-wrapper">
+            <textarea id="txt" placeholder="iMessage" rows="1" oninput="handleInput(this)" onclick="closeAllPanels(); closeMenu();"></textarea>
+        </div>
+        <button class="send-btn-ios" id="sendBtn" onclick="sendMe()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
     </div>
 
+    <!-- 功能扩展面板 -->
     <div class="panel-box" id="panelBox">
         <div class="plus-panel" id="plusPanel" style="display:none;">
             <div class="panel-item" onclick="openCards()">
@@ -247,14 +398,6 @@ button.primary-btn:active {background:#06ad56}
                 <div>照片</div>
             </div>
             <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
-            <div class="panel-item" onclick="alert('语音通话功能正在接入中...')">
-                <div class="panel-icon">📞</div>
-                <div>语音通话</div>
-            </div>
-            <div class="panel-item" onclick="alert('视频通话功能正在接入中...')">
-                <div class="panel-icon">📹</div>
-                <div>视频通话</div>
-            </div>
         </div>
 
         <div class="emoji-panel" id="emojiPanel" style="display:none;">
@@ -265,146 +408,112 @@ button.primary-btn:active {background:#06ad56}
     </div>
 </div>
 
-<!-- 右侧抽屉菜单栏 -->
+<!-- 抽屉菜单 -->
 <div class="drawer" id="drawer">
-    <div class="item drawer-back" onclick="closeMenu()">← 返回聊天</div>
+    <div class="item drawer-back" onclick="closeMenu()">❮ 返回</div>
     <div class="item" onclick="openSystem()">⚙️ 系统设置</div>
     <div class="item" onclick="openManageCards()">🃏 字卡管理</div>
-    <div class="item" onclick="alert('功能开发中...')">💌 书信</div>
-    <div class="item" onclick="alert('功能开发中...')">📍 查岗</div>
 </div>
 
-<!-- 1. 系统设置页面 -->
+<!-- 设置页面 -->
 <div class="page" id="systemPage">
-    <div class="phead"><div class="back-btn" onclick="closeSystem()">← 系统设置</div></div>
+    <div class="phead"><div class="back-btn" onclick="closeSystem()">❮ 系统设置</div></div>
     
-    <!-- 完美还原图片设计风格的频率区 -->
     <div class="img-style-title">回复速度</div>
     <div class="img-style-box">
         <div class="img-style-row">
-            <span style="font-size:15px;">最短等待</span>
+            <span>最短等待</span>
             <input type="range" id="replyMinSec" class="img-style-slider" min="1" max="30" step="1" oninput="updateSliderView('replyMinSec', this.value+'s')">
-            <span class="img-style-right-val" id="val_replyMinSec">3s</span>
+            <span id="val_replyMinSec" style="color:#8e8e93;">3s</span>
         </div>
         <div class="img-style-row">
-            <span style="font-size:15px;">最长等待</span>
+            <span>最长等待</span>
             <input type="range" id="replyMaxMin" class="img-style-slider" min="0.5" max="10" step="0.5" oninput="updateSliderView('replyMaxMin', this.value+'分钟')">
-            <span class="img-style-right-val" id="val_replyMaxMin">1.5分钟</span>
+            <span id="val_replyMaxMin" style="color:#8e8e93;">1.5分钟</span>
         </div>
     </div>
 
     <div class="img-style-title">主动发送</div>
     <div class="img-style-box">
         <div class="img-style-row">
-            <div class="img-style-left">
-                <div class="img-style-left-icon">🚀</div>
-                <span>主动发消息给我</span>
-            </div>
+            <span>主动发消息给我</span>
             <input type="checkbox" id="activeToggle" class="img-style-switch">
         </div>
         <div class="img-style-row">
-            <span style="font-size:15px;">间隔</span>
+            <span>间隔</span>
             <input type="range" id="activeMaxMin" class="img-style-slider" min="1" max="30" step="1" oninput="updateSliderView('activeMaxMin', this.value+'分钟')">
-            <span class="img-style-right-val" id="val_activeMaxMin">5分钟</span>
+            <span id="val_activeMaxMin" style="color:#8e8e93;">5分钟</span>
         </div>
     </div>
 
-    <div class="img-style-title">拼字卡</div>
+    <div class="img-style-title">字卡设置</div>
     <div class="img-style-box">
-        <div class="img-style-row" style="align-items: flex-start;">
-            <div class="img-style-left" style="flex:1; padding-right:15px; align-items:flex-start;">
-                <div class="img-style-left-icon" style="margin-top:2px;">🧩</div>
-                <span style="font-size:14px; color:#777; line-height:1.4;">拼字卡 <span style="color:#aaa; font-size:13px;">开启后，系统会随机将字卡拼接合并发送</span></span>
-            </div>
+        <div class="img-style-row">
+            <span>拼接字卡 (空格分隔)</span>
             <input type="checkbox" id="mergeCardsToggle" class="img-style-switch">
         </div>
     </div>
 
-    <div class="card" style="padding: 10px; margin-top:0;">
-        <div class="card-label" style="margin-top:0;">对方最大连发数量 (1-7条)</div>
-        <input type="number" id="maxComboLines" class="wechat-input" min="1" max="7" placeholder="3">
-        <br><br>
-        <button class="primary-btn" style="width:100%; height:40px; font-size:14px;" onclick="saveFrequencySettings()">保存所有频率与设置</button>
+    <div class="card">
+        <div class="card-label">连发条数 (1-7)</div>
+        <input type="number" id="maxComboLines" class="ios-input" min="1" max="7"><br><br>
+        <button class="primary-btn" style="width:100%;" onclick="saveFrequencySettings()">保存参数设置</button>
     </div>
 
     <div class="card">
-        <h3>👤 修改头像昵称</h3>
+        <h3>👤 个人资料</h3>
         <div class="card-label">我的头像</div>
-        <img id="meAvatarPreview" class="avatar"><br>
         <input type="file" accept="image/*" onchange="avatarChange(event,'me')"><br>
         <div class="card-label">我的昵称</div>
-        <input type="text" id="meName" class="wechat-input"><br>
+        <input type="text" id="meName" class="ios-input"><br>
         <div class="card-label">对方头像</div>
-        <img id="partnerAvatarPreview" class="avatar"><br>
         <input type="file" accept="image/*" onchange="avatarChange(event,'partner')"><br>
         <div class="card-label">对方昵称</div>
-        <input type="text" id="partnerName" class="wechat-input"><br><br>
-        <button class="primary-btn" onclick="saveProfile()">保存基础资料</button>
+        <input type="text" id="partnerName" class="ios-input"><br><br>
+        <button class="primary-btn" style="width:100%;" onclick="saveProfile()">保存个人资料</button>
     </div>
-
-    <div class="card">
-        <h3>💬 聊天记录备份</h3>
-        <div class="input-row">
-            <button class="primary-btn" onclick="exportChatHistory()" style="flex:1;">📤 导出聊天记录</button>
-            <button onclick="document.getElementById('chatHistoryFile').click()" style="flex:1; border: 1px solid #07c160; color:#07c160; font-weight:bold;">📥 导入聊天记录</button>
-        </div>
-        <input type="file" id="chatHistoryFile" accept=".json" style="display:none" onchange="importChatHistory(event)">
-        <br>
-        <button onclick="clearChatHistory()" style="width:100%; border-color:#ff4d4f; color:#ff4d4f; margin-top:8px;">⚠️ 清空本地聊天历史</button>
-    </div>
-
-    <div class="card"><button onclick="closeSystem()" style="width:100%;">返回聊天</button></div>
 </div>
 
-<!-- 2. 字卡管理页面 -->
+<!-- 字卡管理页面 -->
 <div class="page" id="manageCardsPage">
-    <div class="phead"><div class="back-btn" onclick="closeManageCards()">← 字卡管理</div></div>
+    <div class="phead"><div class="back-btn" onclick="closeManageCards()">❮ 字卡管理</div></div>
     <div class="card">
-        <h3>字卡库设置</h3><br>
+        <h3>字卡库操作</h3><br>
         <button onclick="addGroup()">新增分组</button>
-        <button onclick="document.getElementById('jsonFile').click()">导入JSON文件</button>
-        <button onclick="exportJSON()">导出JSON文件</button>
-        <button onclick="clearAllCards()" style="border-color:#ff4d4f; color:#ff4d4f;">🗑️ 清空所有字卡</button>
+        <button onclick="document.getElementById('jsonFile').click()">导入JSON</button>
+        <button onclick="exportJSON()">导出JSON</button>
         <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
-        <div id="groups"></div>
+        <div id="groups" style="margin-top:15px;"></div>
     </div>
-    <div class="card"><button onclick="closeManageCards()">返回聊天</button></div>
 </div>
 
-<!-- 3. 聊天中的字卡快捷回复弹窗 -->
+<!-- 快速发送字卡页面 -->
 <div class="page" id="cardPage">
-    <div class="phead"><div class="back-btn" onclick="closeCards()">← 对方字卡回复</div></div>
+    <div class="phead"><div class="back-btn" onclick="closeCards()">❮ 选择字卡</div></div>
     <div id="cardArea"></div>
-    <div class="card"><button onclick="closeCards()">关闭</button></div>
 </div>
 
 <script>
 let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
-let customEmojis=JSON.parse(localStorage.getItem('customEmojis')||'[]');
 let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1.5,"activeMaxMin":5,"activeToggle":true,"mergeCardsToggle":true}');
 let chatHistory=JSON.parse(localStorage.getItem('chatHistory')||'[]');
 
-let openGroupIds=[];
 let currentActivePanel = null;
 let activeMsgTimer = null; 
+let typingBubbleElement = null; // 输入中气泡引用
+
+const tailSvg = `<svg class="tail" viewBox="0 0 15 18"><path d="M15,18 C9,18 0,13 0,0 C4,8 10,12 15,12 Z"></path></svg>`;
 
 function saveAll(){
     localStorage.setItem("profile",JSON.stringify(profile));
     localStorage.setItem("groups",JSON.stringify(groups));
-    localStorage.setItem("customEmojis",JSON.stringify(customEmojis));
     localStorage.setItem("freqSettings",JSON.stringify(freqSettings));
     localStorage.setItem("chatHistory",JSON.stringify(chatHistory)); 
 }
 
-function menu(event){
-    event.stopPropagation();
-    document.getElementById('drawer').classList.toggle('show');
-}
-
-function closeMenu(){
-    document.getElementById('drawer').classList.remove('show');
-}
+function menu(event){ event.stopPropagation(); document.getElementById('drawer').classList.toggle('show'); }
+function closeMenu(){ document.getElementById('drawer').classList.remove('show'); }
 
 function avatarChange(e,type){
     let f=e.target.files[0];
@@ -419,25 +528,19 @@ function avatarChange(e,type){
     r.readAsDataURL(f);
 }
 
-function updateSliderView(id, text) {
-    document.getElementById('val_' + id).innerText = text;
-}
+function updateSliderView(id, text) { document.getElementById('val_' + id).innerText = text; }
 
 function renderProfile(){
     meName.value=profile.me.name;
     partnerName.value=profile.partner.name;
-    partnerTitle.innerText=profile.partner.name;
-    if(profile.me.avatar) meAvatarPreview.src=profile.me.avatar;
-    if(profile.partner.avatar) partnerAvatarPreview.src=profile.partner.avatar;
+    partnerNameHeader.innerText=profile.partner.name;
+    if(profile.partner.avatar) headerAvatar.src=profile.partner.avatar;
 
     document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
-    
     document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
     updateSliderView('replyMinSec', (freqSettings.replyMinSec || 3) + 's');
-
     document.getElementById('replyMaxMin').value = freqSettings.replyMaxMin || 1.5;
     updateSliderView('replyMaxMin', (freqSettings.replyMaxMin || 1.5) + '分钟');
-
     document.getElementById('activeMaxMin').value = freqSettings.activeMaxMin || 5;
     updateSliderView('activeMaxMin', (freqSettings.activeMaxMin || 5) + '分钟');
 
@@ -448,10 +551,8 @@ function renderProfile(){
 function saveProfile(){
     profile.me.name=meName.value;
     profile.partner.name=partnerName.value;
-    saveAll();
-    renderProfile();
-    renderChatFromHistory(); 
-    alert("基础资料已保存");
+    saveAll(); renderProfile(); renderChatFromHistory();
+    alert("资料保存成功");
 }
 
 function saveFrequencySettings() {
@@ -461,18 +562,9 @@ function saveFrequencySettings() {
     freqSettings.activeMaxMin = parseFloat(document.getElementById('activeMaxMin').value) || 5;
     freqSettings.activeToggle = document.getElementById('activeToggle').checked;
     freqSettings.mergeCardsToggle = document.getElementById('mergeCardsToggle').checked;
-    
-    saveAll();
-    renderProfile();
-    alert("频率控制设置已全部保存成功！");
+    saveAll(); renderProfile();
+    alert("设置已保存");
     resetActiveMessageTimer(); 
-}
-
-function getFormattedTime() {
-    let now = new Date();
-    let hh = String(now.getHours()).padStart(2, '0');
-    let mm = String(now.getMinutes()).padStart(2, '0');
-    return `${hh}:${mm}`;
 }
 
 function renderChatFromHistory() {
@@ -480,25 +572,26 @@ function renderChatFromHistory() {
     chatHistory.forEach(item => {
         let d=document.createElement("div");
         d.className="msg "+(item.side==="me"?"right":"");
-        let av=item.side==="me"?profile.me.avatar:profile.partner.avatar;
-        let name=item.side==="me"?profile.me.name:profile.partner.name;
 
-        let contentHtml = (item.isHtml) ? item.text : `<div class="bubble">${item.text}</div>`;
+        let contentHtml = (item.isHtml) ? item.text : `<div class="bubble">${item.text}${tailSvg}</div>`;
+        
+        // 渲染状态勾选图标
         let statusHtml = '';
         if (item.side === "me") {
-            statusHtml = `<span class="read-status ${item.status==='已读'?'read':'unread'}" id="${item.statusId}">${item.status}</span>`;
+            let isRead = item.status === '已读';
+            let iconClass = isRead ? 'read-status read' : 'read-status unread';
+            let iconSymbol = isRead ? '✓✓' : '✓';
+            statusHtml = `<span class="${iconClass}">${iconSymbol}</span>`;
         }
         
         let timeDisplayHtml = item.time ? `<div class="msg-time">${item.time}</div>` : '';
 
         d.innerHTML=`
-        <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
         <div class="msg-body">
-            <div class="small" style="text-align:${item.side==='me'?'right':'left'}">${name}</div>
             <div class="bubble-container">
                 ${contentHtml}
-                ${statusHtml}
             </div>
+            ${statusHtml}
             ${timeDisplayHtml}
         </div>
         `;
@@ -507,186 +600,10 @@ function renderChatFromHistory() {
     chat.scrollTop=chat.scrollHeight;
 }
 
-function exportChatHistory() {
-    if(!chatHistory || chatHistory.length === 0) { alert("目前还没有聊天历史可以导出哦。"); return; }
-    try {
-        let dataStr = JSON.stringify(chatHistory, null, 4);
-        let blob = new Blob([dataStr], { type: "application/json" });
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement("a");
-        a.href = url; a.download = `chat_history_backup.json`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch(e) { alert("导出历史记录失败！"); }
-}
-
-function importChatHistory(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            let importedHistory = JSON.parse(event.target.result);
-            if (Array.isArray(importedHistory)) {
-                chatHistory = importedHistory;
-                saveAll();
-                renderChatFromHistory();
-                alert(`成功导入恢复了 ${importedHistory.length} 条聊天记录！`);
-            } else { alert("导入失败：文件结构不符合聊天历史规范。"); }
-        } catch(err) { alert("解析文件失败，请确保导入的是合法的JSON备份。"); }
-        e.target.value = '';
-    };
-    reader.readAsText(file);
-}
-
-function clearChatHistory() {
-    if(confirm("确定要清空手机里的全部聊天历史记录吗？此操作不可逆哦！")) {
-        chatHistory = [];
-        saveAll();
-        renderChatFromHistory();
-    }
-}
-
-function openSystem(){
-    systemPage.classList.add('show');
-    closeMenu();
-    renderProfile();
-}
-function closeSystem(){
-    systemPage.classList.remove('show');
-}
-
-function openManageCards(){
-    manageCardsPage.classList.add('show');
-    closeMenu();
-    renderGroups();
-}
-function closeManageCards(){
-    manageCardsPage.classList.remove('show');
-}
-
-function addGroup(){
-    let n=prompt("分组名称");
-    if(!n)return;
-    let newId = Date.now();
-    groups.push({id:newId,name:n,cards:[]});
-    openGroupIds.push(newId);
-    saveAll();
-    renderGroups();
-}
-
-function toggleGroup(id){
-    let idx = openGroupIds.indexOf(id);
-    if(idx > -1){ openGroupIds.splice(idx, 1); } 
-    else { openGroupIds.push(id); }
-    renderGroups();
-}
-
-function renderGroups(){
-    let html='';
-    groups.forEach(g=>{
-        let isOpen = openGroupIds.includes(g.id) ? 'open' : '';
-        html+=`
-        <div class="group ${isOpen}">
-        <div class="group-header" onclick="toggleGroup(${g.id})">
-            <span class="group-title"><span class="group-arrow">▶</span> ${g.name} (${g.cards.length})</span>
-            <button onclick="event.stopPropagation();addCard(${g.id})">+字卡</button>
-        </div>
-        <div class="group-content">
-            <div class="card-list">
-            ${g.cards.map((c,i)=>`
-            <div class="card-item">
-                <span>${c}</span>
-                <button onclick="delCard(${g.id},${i})">删除</button>
-            </div>`).join('')}
-            ${g.cards.length === 0 ? '<div class="small" style="text-align:center;color:#999;padding:10px 0;">暂无字卡</div>':''}
-            </div>
-        </div>
-        </div>`;
-    });
-    document.getElementById('groups').innerHTML=html;
-}
-
-function addCard(id){
-    let t=prompt("字卡内容");
-    if(!t)return;
-    groups.find(x=>x.id===id).cards.push(t);
-    saveAll();
-    renderGroups();
-}
-
-function delCard(id,i){
-    groups.find(x=>x.id===id).cards.splice(i,1);
-    saveAll();
-    renderGroups();
-}
-
-function clearAllCards() {
-    if(confirm("💥 警告：您确定要彻底清空所有的字卡分组和分组内的字卡吗？")) {
-        if(confirm("最后一次确认：清空后将无法找回，除非您之前导出过备份。确定清空吗？")) {
-            groups = [];
-            openGroupIds = [];
-            saveAll();
-            renderGroups();
-            alert("所有的字卡已成功清空！");
-        }
-    }
-}
-
-function importJSON(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(event) {
-        try {
-            let importedData = JSON.parse(event.target.result);
-            let targetGroups = [];
-            if (importedData && Array.isArray(importedData.customReplyGroups)) {
-                targetGroups = importedData.customReplyGroups;
-            } else if (Array.isArray(importedData)) {
-                targetGroups = importedData;
-            } else {
-                alert("导入失败：格式不对。");
-                return;
-            }
-            let addedCount = 0;
-            targetGroups.forEach(item => {
-                let incomingCards = item.cards || item.items;
-                let groupName = item.name;
-                if (groupName && Array.isArray(incomingCards)) {
-                    let existingGroup = groups.find(g => g.name === groupName);
-                    if (existingGroup) {
-                        existingGroup.cards = [...new Set([...existingGroup.cards, ...incomingCards])];
-                    } else {
-                        let newId = Date.now() + Math.random();
-                        groups.push({ id: newId, name: groupName, cards: incomingCards });
-                        openGroupIds.push(newId);
-                    }
-                    addedCount++;
-                }
-            });
-            if(addedCount > 0) {
-                saveAll(); renderGroups();
-                alert(`导入并合并了 ${addedCount} 个分组`);
-            } else { alert("未匹配到分组数据。"); }
-        } catch (err) { alert("解析文件失败。"); }
-        e.target.value = '';
-    };
-    reader.readAsText(file);
-}
-
-function exportJSON() {
-    if (!groups || groups.length === 0) { alert("没有数据。"); return; }
-    try {
-        let dataStr = JSON.stringify(groups, null, 4);
-        let blob = new Blob([dataStr], { type: "application/json" });
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement("a");
-        a.href = url; a.download = `word_cards.json`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (err) { alert("导出失败"); }
-}
+function openSystem(){ systemPage.classList.add('show'); closeMenu(); renderProfile(); }
+function closeSystem(){ systemPage.classList.remove('show'); }
+function openManageCards(){ manageCardsPage.classList.add('show'); closeMenu(); renderGroups(); }
+function closeManageCards(){ manageCardsPage.classList.remove('show'); }
 
 function togglePanel(type) {
     let box = document.getElementById('panelBox');
@@ -697,12 +614,9 @@ function togglePanel(type) {
     } else {
         box.classList.add('show');
         if (type === 'plus') {
-            plus.style.display = 'flex';
-            emoji.style.display = 'none';
+            plus.style.display = 'flex'; emoji.style.display = 'none';
         } else {
-            plus.style.display = 'none';
-            emoji.style.display = 'flex';
-            renderEmojis();
+            plus.style.display = 'none'; emoji.style.display = 'flex';
         }
         currentActivePanel = type;
         setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 150);
@@ -716,56 +630,10 @@ function closeAllPanels() {
 
 function handleInput(el) {
     if(el.value.trim().length > 0) {
-        plusToggleBtn.style.display = 'none';
         sendBtn.style.display = 'flex';
     } else {
-        plusToggleBtn.style.display = 'flex';
         sendBtn.style.display = 'none';
     }
-}
-
-function addCustomEmoji(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(event) {
-        customEmojis.push(event.target.result);
-        saveAll(); renderEmojis();
-    }
-    reader.readAsDataURL(file);
-    e.target.value = '';
-}
-
-function renderEmojis() {
-    let html = customEmojis.map((imgSrc, index) => `
-        <img class="emoji-item" src="${imgSrc}" onclick="sendEmoji(${index})" oncontextmenu="event.preventDefault();deleteEmoji(${index})">
-    `).join('');
-    document.getElementById('emojiList').innerHTML = html;
-}
-
-function deleteEmoji(index) {
-    if(confirm("确定要删除这个表情包吗？")) {
-        customEmojis.splice(index, 1);
-        saveAll(); renderEmojis();
-    }
-}
-
-function sendEmoji(index) {
-    let imgSrc = customEmojis[index];
-    addMsg("me", `<img style="max-width:160px;max-height:160px;border-radius:4px" src="${imgSrc}">`, true);
-    closeAllPanels();
-}
-
-function sendImage(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(event) {
-        addMsg("me", `<img style="max-width:160px;max-height:160px;border-radius:4px" src="${event.target.result}">`, true);
-        closeAllPanels();
-    }
-    reader.readAsDataURL(file);
-    e.target.value = '';
 }
 
 function sendMe(){
@@ -773,47 +641,33 @@ function sendMe(){
     if(!t)return;
     addMsg("me",t);
     txt.value="";
-    plusToggleBtn.style.display = 'flex';
     sendBtn.style.display = 'none';
 }
 
 function addMsg(side,text,isHtml=false){
-    let uniqueStatusId = "status_" + Date.now() + Math.floor(Math.random() * 1000);
-    let currentTimeString = getFormattedTime();
+    let uniqueStatusId = "status_" + Date.now();
+    let now = new Date();
+    let timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     
-    let msgObj = {
-        side: side,
-        text: text,
-        isHtml: isHtml,
-        statusId: uniqueStatusId,
-        status: '未读',
-        time: currentTimeString
-    };
-    
+    let msgObj = { side, text, isHtml, statusId: uniqueStatusId, status: '未读', time: timeStr };
     chatHistory.push(msgObj);
     saveAll(); 
 
     let d=document.createElement("div");
     d.className="msg "+(side==="me"?"right":"");
-    let av=side==="me"?profile.me.avatar:profile.partner.avatar;
-    let name=side==="me"?profile.me.name:profile.partner.name;
 
-    let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}</div>`;
-    let statusHtml = '';
-
-    if (side === "me") {
-        statusHtml = `<span class="read-status unread" id="${uniqueStatusId}">未读</span>`;
-    }
+    let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}${tailSvg}</div>`;
+    
+    // 渲染未读单勾
+    let statusHtml = (side === "me") ? `<span class="read-status unread" id="${uniqueStatusId}">✓</span>` : '';
 
     d.innerHTML=`
-    <img class="avatar" src="${av||''}" onerror="this.style.opacity=0;">
     <div class="msg-body">
-        <div class="small" style="text-align:${side==='me'?'right':'left'}">${name}</div>
         <div class="bubble-container">
             ${contentHtml}
-            ${statusHtml}
         </div>
-        <div class="msg-time">${currentTimeString}</div>
+        ${statusHtml}
+        <div class="msg-time">${timeStr}</div>
     </div>
     `;
     chat.appendChild(d);
@@ -821,71 +675,53 @@ function addMsg(side,text,isHtml=false){
 
     if (side === "me") {
         resetActiveMessageTimer();
-
-        let randomDelay = Math.floor(Math.random() * (60 - 3 + 1) + 3) * 1000;
+        let randomDelay = Math.floor(Math.random() * 3 + 2) * 1000;
         setTimeout(function() {
             let statusEl = document.getElementById(uniqueStatusId);
             if (statusEl) {
-                statusEl.innerText = "已读";
-                statusEl.classList.remove("unread");
-                statusEl.classList.add("read");
-                
+                statusEl.className = "read-status read";
+                statusEl.innerText = "✓✓"; // 转换为已读蓝色双勾
                 let target = chatHistory.find(h => h.statusId === uniqueStatusId);
                 if(target) target.status = '已读';
                 saveAll();
-
                 triggerAdvancedAutoReply();
             }
         }, randomDelay);
     }
 }
 
-function resetActiveMessageTimer() {
-    if (activeMsgTimer) clearTimeout(activeMsgTimer);
-    if (freqSettings.activeToggle === false) return;
-
-    let intervalMinutes = parseFloat(freqSettings.activeMaxMin) || 5;
-    let triggerDelayMs = intervalMinutes * 60 * 1000;
-
-    activeMsgTimer = setTimeout(function() {
-        triggerSystemActiveMessage();
-    }, triggerDelayMs);
+/* 显示左侧三点浮动输入气泡 */
+function showTypingBubble() {
+    if (typingBubbleElement) return;
+    typingBubbleElement = document.createElement("div");
+    typingBubbleElement.className = "msg";
+    typingBubbleElement.innerHTML = `
+        <div class="msg-body">
+            <div class="bubble-container">
+                <div class="bubble typing-bubble">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    ${tailSvg}
+                </div>
+            </div>
+        </div>
+    `;
+    chat.appendChild(typingBubbleElement);
+    chat.scrollTop = chat.scrollHeight;
 }
 
-function triggerSystemActiveMessage() {
-    if (freqSettings.activeToggle === false) return;
-
-    let allCards = [];
-    groups.forEach(g => {
-        if (g.cards && g.cards.length > 0) allCards = allCards.concat(g.cards);
-    });
-    if (allCards.length === 0) { resetActiveMessageTimer(); return; }
-
-    let bubbleCount = Math.floor(Math.random() * 3) + 1;
-
-    let bubbleQueue = [];
-    for (let b = 0; b < bubbleCount; b++) {
-        // 核心修改：使用 ' ' (空格) 替代换行符进行字卡拼接
-        let cardsInBubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * 3) + 1) : 1; 
-        let chosenCards = [];
-        for (let c = 0; c < cardsInBubbleCount; c++) {
-            let randomIndex = Math.floor(Math.random() * allCards.length);
-            chosenCards.push(allCards[randomIndex]);
-        }
-        bubbleQueue.push(chosenCards.join(' '));
+/* 隐藏输入气泡 */
+function hideTypingBubble() {
+    if (typingBubbleElement) {
+        chat.removeChild(typingBubbleElement);
+        typingBubbleElement = null;
     }
-
-    sendQueueItem(bubbleQueue, 0, 1500); 
-    resetActiveMessageTimer();
 }
 
 function triggerAdvancedAutoReply() {
-    if (Math.random() < 0.1) return; 
-
     let allCards = [];
-    groups.forEach(g => {
-        if (g.cards && g.cards.length > 0) allCards = allCards.concat(g.cards);
-    });
+    groups.forEach(g => { if (g.cards) allCards = allCards.concat(g.cards); });
     if (allCards.length === 0) return;
 
     let userMaxLines = parseInt(freqSettings.maxComboLines) || 3;
@@ -893,45 +729,36 @@ function triggerAdvancedAutoReply() {
 
     let bubbleQueue = [];
     for (let b = 0; b < bubbleCount; b++) {
-        // 核心修改：使用 ' ' (空格) 替代换行符进行字卡拼接
         let cardsInBubbleCount = (freqSettings.mergeCardsToggle !== false) ? (Math.floor(Math.random() * 3) + 1) : 1; 
         let chosenCards = [];
         for (let c = 0; c < cardsInBubbleCount; c++) {
-            let randomIndex = Math.floor(Math.random() * allCards.length);
-            chosenCards.push(allCards[randomIndex]);
+            chosenCards.push(allCards[Math.floor(Math.random() * allCards.length)]);
         }
         bubbleQueue.push(chosenCards.join(' '));
     }
 
-    let minMs = (parseFloat(freqSettings.replyMinSec) || 3) * 1000;
-    let maxMs = (parseFloat(freqSettings.replyMaxMin) || 1.5) * 60 * 1000;
-    if (minMs > maxMs) { let tmp = minMs; minMs = maxMs; maxMs = tmp; }
-    
-    let firstMessageDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
-
-    sendQueueItem(bubbleQueue, 0, firstMessageDelay);
+    sendQueueItem(bubbleQueue, 0, 1500);
 }
 
 function sendQueueItem(queue, index, delayTime) {
     if (index >= queue.length) return;
-
     setTimeout(function() {
-        let typingEl = document.getElementById("typingStatus");
-        if (typingEl) typingEl.style.display = "inline-block";
-
-        let processTypingTime = (index === 0) ? Math.min(delayTime, 2000) : (Math.floor(Math.random() * 1500) + 1000);
+        showTypingBubble();
 
         setTimeout(function() {
+            hideTypingBubble();
             addMsg("other", queue[index]);
-            if (typingEl) typingEl.style.display = "none";
-
             if (index + 1 < queue.length) {
-                let nextBurstDelay = Math.floor(Math.random() * 1000) + 1000;
-                sendQueueItem(queue, index + 1, nextBurstDelay);
+                sendQueueItem(queue, index + 1, 1200);
             }
-        }, processTypingTime);
+        }, 1500);
+    }, delayTime);
+}
 
-    }, (index === 0) ? (delayTime - Math.min(delayTime, 2000)) : delayTime);
+function resetActiveMessageTimer() {
+    if (activeMsgTimer) clearTimeout(activeMsgTimer);
+    if (freqSettings.activeToggle === false) return;
+    activeMsgTimer = setTimeout(() => { triggerAdvancedAutoReply(); }, (freqSettings.activeMaxMin || 5) * 60 * 1000);
 }
 
 function openCards(){
@@ -939,32 +766,16 @@ function openCards(){
     closeAllPanels();
     let html='';
     groups.forEach(g=>{
-        html+=`<div class="card"><h3>${g.name} (${g.cards.length})</h3>
-        <div style="max-height:160px; overflow-y:auto; margin-top:6px;">`;
+        html+=`<div class="card"><h3>${g.name}</h3>`;
         g.cards.forEach(c=>{
-            html+=`<div style="padding:10px 8px;border-bottom:1px solid #eee;cursor:pointer" onclick="sendCard('${c.replace(/'/g,'\\\'')}')">${c}</div>`;
+            html+=`<div style="padding:10px 0;border-bottom:0.5px solid #e5e5ea;cursor:pointer" onclick="sendCard('${c}')">${c}</div>`;
         });
-        if(g.cards.length===0) html+=`<div class="small" style="color:#999;padding:8px 0;">该分组暂无字卡</div>`;
-        html+='</div></div>';
+        html+='</div>';
     });
-    cardArea.innerHTML=html || '<div class="card" style="text-align:center;color:#999;">请先前往侧边栏【字卡管理】添加字卡</div>';
+    cardArea.innerHTML = html;
 }
-
-function sendCard(t){
-    addMsg("other",t);
-    closeCards();
-}
-
-function closeCards(){
-    cardPage.classList.remove('show');
-}
-
-document.getElementById('txt').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMe();
-    }
-});
+function sendCard(t){ addMsg("other",t); closeCards(); }
+function closeCards(){ cardPage.classList.remove('show'); }
 
 renderProfile();
 renderChatFromHistory();
