@@ -5,23 +5,64 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>iMessage 风格聊天</title>
 <style>
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --header-bg: rgba(249, 249, 249, 0.94);
+    --border-color: rgba(0, 0, 0, 0.15);
+    --bubble-other: #e9e9eb;
+    --bubble-other-text: #000000;
+    --input-bg: #ffffff;
+    --panel-bg: #f2f2f7;
+    --time-text: #c7c7cc;
+}
+
+/* 暗黑模式变量 */
+body.dark-mode {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --header-bg: rgba(28, 28, 30, 0.94);
+    --border-color: rgba(255, 255, 255, 0.15);
+    --bubble-other: #2c2c2e;
+    --bubble-other-text: #ffffff;
+    --input-bg: #1c1c1e;
+    --panel-bg: #1c1c1e;
+    --time-text: #636366;
+}
+
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif}
-body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:#000}
+body{background:var(--bg-color);height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--text-color);transition: background 0.3s, color 0.3s;}
 
 /* iMessage 顶栏 */
 .header{
     height: 60px;
-    background: rgba(249, 249, 249, 0.94);
+    background: var(--header-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.15);
+    border-bottom: 0.5px solid var(--border-color);
     flex-shrink: 0;
     z-index: 5;
 }
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    width: 40px;
+}
+.header-right { justify-content: flex-end; }
+
+.mode-toggle-btn {
+    font-size: 20px;
+    cursor: pointer;
+    user-select: none;
+    background: none;
+    border: none;
+    color: #007aff;
+}
+
 .header-center {
     display: flex;
     flex-direction: column;
@@ -30,30 +71,49 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     cursor: pointer;
 }
 .header-avatar {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
     background: #e5e5ea;
     margin-bottom: 2px;
 }
 .header-avatar:not([src]), .header-avatar[src=""] { opacity: 0; }
-#partnerTitle {
-    font-size: 11px;
-    color: #8e8e93;
-    font-weight: 400;
+
+.header-name-box {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 #partnerNameHeader {
     font-size: 13px;
     font-weight: 600;
-    color: #000;
+    color: var(--text-color);
     line-height: 1.1;
 }
-.menu-btn {
-    font-size: 20px;
-    color: #007aff;
+.header-arrow {
+    font-size: 11px;
+    color: #8e8e93;
+}
+
+/* 视频通话图标 */
+.video-call-btn {
+    background: none;
+    border: none;
     cursor: pointer;
-    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.video-call-btn svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: #007aff;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* 聊天主体区域 */
@@ -61,7 +121,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     flex: 1;
     overflow-y: auto;
     padding: 12px 12px 20px 12px;
-    background: #fff;
+    background: var(--bg-color);
     display: flex;
     flex-direction: column;
 }
@@ -101,8 +161,8 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 .bubble {
     padding: 8px 14px;
     border-radius: 18px;
-    background: #e9e9eb;
-    color: #000;
+    background: var(--bubble-other);
+    color: var(--bubble-other-text);
     font-size: 16px;
     line-height: 1.35;
     word-break: break-word;
@@ -117,7 +177,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     color: #fff;
 }
 
-/* 气泡尾巴 (SVG 绘制圆滑尾巴) */
+/* 气泡尾巴 */
 .tail {
     position: absolute;
     bottom: 0;
@@ -126,7 +186,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 }
 .msg:not(.right) .tail {
     left: -6px;
-    fill: #e9e9eb;
+    fill: var(--bubble-other);
 }
 .msg.right .tail {
     right: -6px;
@@ -134,7 +194,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     transform: scaleX(-1);
 }
 
-/* 状态标记：勾选符号（单勾未读、双勾已读） */
+/* 状态标记：双勾/单勾 */
 .read-status {
     font-size: 13px;
     margin-bottom: 2px;
@@ -142,26 +202,22 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     font-weight: bold;
     user-select: none;
 }
-.read-status.unread {
-    color: #8e8e93; /* 未读：灰色单勾 */
-}
+.read-status.unread { color: #8e8e93; }
 .read-status.read {
-    color: #007aff; /* 已读：蓝色双勾 */
-    letter-spacing: -3px; /* 紧凑排列形成双勾效果 */
+    color: #007aff;
+    letter-spacing: -3px;
     margin-right: 3px;
 }
 
 .msg-time {
     font-size: 10px;
-    color: #c7c7cc;
+    color: var(--time-text);
     margin-top: 3px;
     text-align: right;
 }
-.msg:not(.right) .msg-time {
-    text-align: left;
-}
+.msg:not(.right) .msg-time { text-align: left; }
 
-/* 正在输入中——三点浮动气泡样式 */
+/* 正在输入中气泡 */
 .typing-bubble {
     display: flex;
     align-items: center;
@@ -183,22 +239,16 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 .typing-dot:nth-child(3) { animation-delay: 0s; }
 
 @keyframes typingBounce {
-    0%, 80%, 100% {
-        transform: translateY(0);
-        opacity: 0.4;
-    }
-    40% {
-        transform: translateY(-6px);
-        opacity: 1;
-    }
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* iMessage 悬浮输入栏 */
+/* 输入栏 */
 .footer-container {
-    background: rgba(249, 249, 249, 0.94);
+    background: var(--header-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-top: 0.5px solid rgba(0, 0, 0, 0.15);
+    border-top: 0.5px solid var(--border-color);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -214,7 +264,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 .input-wrapper {
     flex: 1;
     border: 1px solid #c6c6c8;
-    background: #fff;
+    background: var(--input-bg);
     border-radius: 20px;
     padding: 6px 12px;
     display: flex;
@@ -231,6 +281,7 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
     line-height: 20px;
     resize: none;
     max-height: 100px;
+    color: var(--text-color);
 }
 
 .btn-icon-ios {
@@ -265,86 +316,105 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 }
 .send-btn-ios svg { width: 14px; height: 14px; fill: #fff; }
 
-/* 展开功能面板 */
 .panel-box {
     height: 0;
     overflow: hidden;
-    background: #f2f2f7;
+    background: var(--panel-bg);
     transition: height 0.2s ease-out;
 }
 .panel-box.show {
     height: 120px;
-    border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-top: 0.5px solid var(--border-color);
 }
-.plus-panel {
-    display: flex;
-    gap: 24px;
-    padding: 16px 20px;
-    overflow-x: auto;
+.plus-panel { display: flex; gap: 24px; padding: 16px 20px; overflow-x: auto; }
+.panel-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; color: #8e8e93; }
+.panel-icon { width: 52px; height: 52px; background: var(--input-bg); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+/* 视频通话全屏弹窗 (参考图二) */
+.call-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #1c1c1e;
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 80px 20px 60px 20px;
+    color: #fff;
 }
-.panel-item {
+.call-modal.show { display: flex; }
+
+.call-info {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 11px;
+    gap: 12px;
+}
+.call-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    object-fit: cover;
+    background: #2c2c2e;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.call-name {
+    font-size: 22px;
+    font-weight: 600;
+    margin-top: 8px;
+}
+.call-status {
+    font-size: 14px;
     color: #8e8e93;
 }
-.panel-icon {
-    width: 52px;
-    height: 52px;
-    background: #fff;
-    border-radius: 14px;
+
+.call-actions {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    gap: 40px;
+    width: 100%;
 }
-
-.emoji-panel {
-    padding: 12px;
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    align-items: center;
-    height: 100%;
-}
-.add-emoji-btn {
+.call-btn {
     width: 60px;
     height: 60px;
-    border-radius: 12px;
-    border: 2px dashed #c7c7cc;
-    background: #fff;
+    border-radius: 50%;
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: #8e8e93;
     cursor: pointer;
+    font-size: 22px;
+}
+.call-btn-mini {
+    background: #2c2c2e;
+    color: #fff;
+}
+.call-btn-hangup {
+    background: #ff3b30;
+    color: #fff;
 }
 
-/* 抽屉菜单与设置页面 */
-.drawer { position: fixed; right: -300px; top: 0; width: 300px; height: 100%; background: #fff; transition: .3s; z-index: 100; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
+/* 抽屉与设置页 */
+.drawer { position: fixed; right: -300px; top: 0; width: 300px; height: 100%; background: var(--bg-color); transition: .3s; z-index: 100; box-shadow: -4px 0 20px rgba(0,0,0,0.1); }
 .drawer.show { right: 0; }
-.drawer-back { background: #f2f2f7; font-weight: 600; color: #007aff; }
-.item { padding: 16px; border-bottom: 0.5px solid #e5e5ea; cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.drawer-back { background: var(--panel-bg); font-weight: 600; color: #007aff; }
+.item { padding: 16px; border-bottom: 0.5px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 10px; font-size: 16px; }
 
-.page { position: fixed; left: 100%; top: 0; width: 100%; height: 100%; background: #f2f2f7; transition: .3s; overflow: auto; z-index: 200; }
+.page { position: fixed; left: 100%; top: 0; width: 100%; height: 100%; background: var(--panel-bg); transition: .3s; overflow: auto; z-index: 200; color: var(--text-color); }
 .page.show { left: 0; }
-.phead { background: rgba(249, 249, 249, 0.94); height: 50px; display: flex; align-items: center; padding: 0 10px; border-bottom: 0.5px solid #c6c6c8; font-weight: 600; color: #007aff; }
+.phead { background: var(--header-bg); height: 50px; display: flex; align-items: center; padding: 0 10px; border-bottom: 0.5px solid var(--border-color); font-weight: 600; color: #007aff; }
 .back-btn { cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 4px; }
 
-.card { background: #fff; margin: 12px; padding: 16px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.card { background: var(--input-bg); margin: 12px; padding: 16px; border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 .card h3 { font-size: 16px; margin-bottom: 12px; }
 .card-label { font-size: 13px; color: #8e8e93; margin: 10px 0 4px 0; }
-.ios-input { width: 100%; padding: 10px 12px; border: 1px solid #c6c6c8; border-radius: 10px; font-size: 15px; outline: none; }
-.ios-input:focus { border-color: #007aff; }
+.ios-input { width: 100%; padding: 10px 12px; border: 1px solid #c6c6c8; border-radius: 10px; font-size: 15px; outline: none; background: var(--input-bg); color: var(--text-color); }
 
 .img-style-title { font-size: 13px; color: #6c6c70; margin: 16px 16px 6px 16px; text-transform: uppercase; }
-.img-style-box { background: #fff; border-radius: 12px; margin: 0 12px 12px 12px; overflow: hidden; }
-.img-style-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid #e5e5ea; min-height: 48px; }
+.img-style-box { background: var(--input-bg); border-radius: 12px; margin: 0 12px 12px 12px; overflow: hidden; }
+.img-style-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); min-height: 48px; }
 .img-style-row:last-child { border-bottom: none; }
 .img-style-slider { flex: 1; margin: 0 12px; -webkit-appearance: none; height: 3px; background: #e5e5ea; border-radius: 2px; }
 .img-style-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer; }
@@ -353,21 +423,34 @@ body{background:#fff;height:100vh;display:flex;flex-direction:column;overflow:hi
 .img-style-switch::before { content: ""; position: absolute; width: 27px; height: 27px; border-radius: 50%; background: #fff; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 .img-style-switch:checked::before { transform: translateX(20px); }
 
-button { padding: 8px 16px; border-radius: 8px; border: 1px solid #c6c6c8; background: #fff; font-size: 14px; cursor: pointer; }
+button { padding: 8px 16px; border-radius: 8px; border: 1px solid #c6c6c8; background: var(--input-bg); color: var(--text-color); font-size: 14px; cursor: pointer; }
 button.primary-btn { background: #007aff; color: #fff; border: none; font-weight: 600; }
 </style>
 </head>
 <body>
 
-<!-- 头部 -->
+<!-- 顶栏 (还原图一) -->
 <div class="header">
-    <div style="width:30px;"></div>
+    <div class="header-left">
+        <button class="mode-toggle-btn" id="modeBtn" onclick="toggleDarkMode()">☀️</button>
+    </div>
+    
     <div class="header-center" onclick="openSystem()">
         <img id="headerAvatar" class="header-avatar">
-        <div id="partnerNameHeader">对方</div>
-        <div id="partnerTitle">iMessage</div>
+        <div class="header-name-box">
+            <span id="partnerNameHeader">对方</span>
+            <span class="header-arrow">></span>
+        </div>
     </div>
-    <div class="menu-btn" onclick="menu(event)">⋯</div>
+    
+    <div class="header-right">
+        <button class="video-call-btn" onclick="startVideoCall()">
+            <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="14" height="16" rx="3"></rect>
+                <path d="M16 10l5-3.5v11l-5-3.5z"></path>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <!-- 消息区 -->
@@ -377,7 +460,6 @@ button.primary-btn { background: #007aff; color: #fff; border: none; font-weight
 <div class="footer-container" onclick="closeMenu()">
     <div class="footer">
         <button class="btn-icon-ios" onclick="togglePanel('plus'); event.stopPropagation();">+</button>
-        <button class="btn-icon-ios" id="emojiToggleBtn" onclick="togglePanel('emoji'); event.stopPropagation();" style="font-size: 18px;">☺</button>
         <div class="input-wrapper">
             <textarea id="txt" placeholder="iMessage" rows="1" oninput="handleInput(this)" onclick="closeAllPanels(); closeMenu();"></textarea>
         </div>
@@ -386,7 +468,7 @@ button.primary-btn { background: #007aff; color: #fff; border: none; font-weight
         </button>
     </div>
 
-    <!-- 功能扩展面板 -->
+    <!-- 扩展面板 -->
     <div class="panel-box" id="panelBox">
         <div class="plus-panel" id="plusPanel" style="display:none;">
             <div class="panel-item" onclick="openCards()">
@@ -399,67 +481,35 @@ button.primary-btn { background: #007aff; color: #fff; border: none; font-weight
             </div>
             <input type="file" id="chatImageInput" accept="image/*" style="display:none" onchange="sendImage(event)">
         </div>
-
-        <div class="emoji-panel" id="emojiPanel" style="display:none;">
-            <div class="add-emoji-btn" onclick="document.getElementById('customEmojiInput').click()">+</div>
-            <input type="file" id="customEmojiInput" accept="image/*" style="display:none" onchange="addCustomEmoji(event)">
-            <div id="emojiList" style="display:inline-flex;gap:12px;"></div>
-        </div>
     </div>
 </div>
 
-<!-- 抽屉菜单 -->
-<div class="drawer" id="drawer">
-    <div class="item drawer-back" onclick="closeMenu()">❮ 返回</div>
-    <div class="item" onclick="openSystem()">⚙️ 系统设置</div>
-    <div class="item" onclick="openManageCards()">🃏 字卡管理</div>
+<!-- 视频通话弹窗 (还原图二) -->
+<div class="call-modal" id="callModal">
+    <div class="call-info">
+        <img id="callAvatar" class="call-avatar">
+        <div id="callName" class="call-name">对方</div>
+        <div id="callStatus" class="call-status">正在等待接听...</div>
+    </div>
+
+    <div class="call-actions">
+        <button class="call-btn call-btn-mini" onclick="endVideoCall()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+            </svg>
+        </button>
+        <button class="call-btn call-btn-hangup" onclick="endVideoCall()">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"></path>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <!-- 设置页面 -->
 <div class="page" id="systemPage">
     <div class="phead"><div class="back-btn" onclick="closeSystem()">❮ 系统设置</div></div>
     
-    <div class="img-style-title">回复速度</div>
-    <div class="img-style-box">
-        <div class="img-style-row">
-            <span>最短等待</span>
-            <input type="range" id="replyMinSec" class="img-style-slider" min="1" max="30" step="1" oninput="updateSliderView('replyMinSec', this.value+'s')">
-            <span id="val_replyMinSec" style="color:#8e8e93;">3s</span>
-        </div>
-        <div class="img-style-row">
-            <span>最长等待</span>
-            <input type="range" id="replyMaxMin" class="img-style-slider" min="0.5" max="10" step="0.5" oninput="updateSliderView('replyMaxMin', this.value+'分钟')">
-            <span id="val_replyMaxMin" style="color:#8e8e93;">1.5分钟</span>
-        </div>
-    </div>
-
-    <div class="img-style-title">主动发送</div>
-    <div class="img-style-box">
-        <div class="img-style-row">
-            <span>主动发消息给我</span>
-            <input type="checkbox" id="activeToggle" class="img-style-switch">
-        </div>
-        <div class="img-style-row">
-            <span>间隔</span>
-            <input type="range" id="activeMaxMin" class="img-style-slider" min="1" max="30" step="1" oninput="updateSliderView('activeMaxMin', this.value+'分钟')">
-            <span id="val_activeMaxMin" style="color:#8e8e93;">5分钟</span>
-        </div>
-    </div>
-
-    <div class="img-style-title">字卡设置</div>
-    <div class="img-style-box">
-        <div class="img-style-row">
-            <span>拼接字卡 (空格分隔)</span>
-            <input type="checkbox" id="mergeCardsToggle" class="img-style-switch">
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-label">连发条数 (1-7)</div>
-        <input type="number" id="maxComboLines" class="ios-input" min="1" max="7"><br><br>
-        <button class="primary-btn" style="width:100%;" onclick="saveFrequencySettings()">保存参数设置</button>
-    </div>
-
     <div class="card">
         <h3>👤 个人资料</h3>
         <div class="card-label">我的头像</div>
@@ -474,19 +524,6 @@ button.primary-btn { background: #007aff; color: #fff; border: none; font-weight
     </div>
 </div>
 
-<!-- 字卡管理页面 -->
-<div class="page" id="manageCardsPage">
-    <div class="phead"><div class="back-btn" onclick="closeManageCards()">❮ 字卡管理</div></div>
-    <div class="card">
-        <h3>字卡库操作</h3><br>
-        <button onclick="addGroup()">新增分组</button>
-        <button onclick="document.getElementById('jsonFile').click()">导入JSON</button>
-        <button onclick="exportJSON()">导出JSON</button>
-        <input type="file" id="jsonFile" accept=".json" style="display:none" onchange="importJSON(event)">
-        <div id="groups" style="margin-top:15px;"></div>
-    </div>
-</div>
-
 <!-- 快速发送字卡页面 -->
 <div class="page" id="cardPage">
     <div class="phead"><div class="back-btn" onclick="closeCards()">❮ 选择字卡</div></div>
@@ -494,14 +531,19 @@ button.primary-btn { background: #007aff; color: #fff; border: none; font-weight
 </div>
 
 <script>
-let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"对方","avatar":""}}');
+let profile=JSON.parse(localStorage.getItem('profile')||'{"me":{"name":"我","avatar":""},"partner":{"name":"AAA.李泽言","avatar":""}}');
 let groups=JSON.parse(localStorage.getItem('groups')||'[{"id":1,"name":"情话","cards":["抱抱","想你啦"]}]');
 let freqSettings=JSON.parse(localStorage.getItem('freqSettings')||'{"maxComboLines":3,"replyMinSec":3,"replyMaxMin":1.5,"activeMaxMin":5,"activeToggle":true,"mergeCardsToggle":true}');
 let chatHistory=JSON.parse(localStorage.getItem('chatHistory')||'[]');
 
 let currentActivePanel = null;
-let activeMsgTimer = null; 
-let typingBubbleElement = null; // 输入中气泡引用
+let typingBubbleElement = null; 
+let isDarkMode = false;
+
+// 通话相关变量
+let callTimer = null;
+let callDuration = 0;
+let callInterval = null;
 
 const tailSvg = `<svg class="tail" viewBox="0 0 15 18"><path d="M15,18 C9,18 0,13 0,0 C4,8 10,12 15,12 Z"></path></svg>`;
 
@@ -512,8 +554,11 @@ function saveAll(){
     localStorage.setItem("chatHistory",JSON.stringify(chatHistory)); 
 }
 
-function menu(event){ event.stopPropagation(); document.getElementById('drawer').classList.toggle('show'); }
-function closeMenu(){ document.getElementById('drawer').classList.remove('show'); }
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    document.getElementById('modeBtn').innerText = isDarkMode ? '🌙' : '☀️';
+}
 
 function avatarChange(e,type){
     let f=e.target.files[0];
@@ -528,24 +573,11 @@ function avatarChange(e,type){
     r.readAsDataURL(f);
 }
 
-function updateSliderView(id, text) { document.getElementById('val_' + id).innerText = text; }
-
 function renderProfile(){
-    meName.value=profile.me.name;
-    partnerName.value=profile.partner.name;
+    if(document.getElementById('meName')) meName.value=profile.me.name;
+    if(document.getElementById('partnerName')) partnerName.value=profile.partner.name;
     partnerNameHeader.innerText=profile.partner.name;
     if(profile.partner.avatar) headerAvatar.src=profile.partner.avatar;
-
-    document.getElementById('maxComboLines').value = freqSettings.maxComboLines || 3;
-    document.getElementById('replyMinSec').value = freqSettings.replyMinSec || 3;
-    updateSliderView('replyMinSec', (freqSettings.replyMinSec || 3) + 's');
-    document.getElementById('replyMaxMin').value = freqSettings.replyMaxMin || 1.5;
-    updateSliderView('replyMaxMin', (freqSettings.replyMaxMin || 1.5) + '分钟');
-    document.getElementById('activeMaxMin').value = freqSettings.activeMaxMin || 5;
-    updateSliderView('activeMaxMin', (freqSettings.activeMaxMin || 5) + '分钟');
-
-    document.getElementById('activeToggle').checked = freqSettings.activeToggle !== false;
-    document.getElementById('mergeCardsToggle').checked = freqSettings.mergeCardsToggle !== false;
 }
 
 function saveProfile(){
@@ -553,18 +585,6 @@ function saveProfile(){
     profile.partner.name=partnerName.value;
     saveAll(); renderProfile(); renderChatFromHistory();
     alert("资料保存成功");
-}
-
-function saveFrequencySettings() {
-    freqSettings.maxComboLines = parseInt(document.getElementById('maxComboLines').value) || 3;
-    freqSettings.replyMinSec = parseFloat(document.getElementById('replyMinSec').value) || 3;
-    freqSettings.replyMaxMin = parseFloat(document.getElementById('replyMaxMin').value) || 1.5;
-    freqSettings.activeMaxMin = parseFloat(document.getElementById('activeMaxMin').value) || 5;
-    freqSettings.activeToggle = document.getElementById('activeToggle').checked;
-    freqSettings.mergeCardsToggle = document.getElementById('mergeCardsToggle').checked;
-    saveAll(); renderProfile();
-    alert("设置已保存");
-    resetActiveMessageTimer(); 
 }
 
 function renderChatFromHistory() {
@@ -575,7 +595,6 @@ function renderChatFromHistory() {
 
         let contentHtml = (item.isHtml) ? item.text : `<div class="bubble">${item.text}${tailSvg}</div>`;
         
-        // 渲染状态勾选图标
         let statusHtml = '';
         if (item.side === "me") {
             let isRead = item.status === '已读';
@@ -600,24 +619,60 @@ function renderChatFromHistory() {
     chat.scrollTop=chat.scrollHeight;
 }
 
-function openSystem(){ systemPage.classList.add('show'); closeMenu(); renderProfile(); }
+function openSystem(){ systemPage.classList.add('show'); renderProfile(); }
 function closeSystem(){ systemPage.classList.remove('show'); }
-function openManageCards(){ manageCardsPage.classList.add('show'); closeMenu(); renderGroups(); }
-function closeManageCards(){ manageCardsPage.classList.remove('show'); }
+
+/* 视频通话逻辑 (50%接听) */
+function startVideoCall() {
+    let modal = document.getElementById('callModal');
+    let avatar = document.getElementById('callAvatar');
+    let name = document.getElementById('callName');
+    let status = document.getElementById('callStatus');
+
+    name.innerText = profile.partner.name || "对方";
+    if (profile.partner.avatar) avatar.src = profile.partner.avatar;
+
+    status.innerText = "正在等待接听...";
+    modal.classList.add('show');
+
+    // 3秒后判定是否接听 (50% 概率)
+    callTimer = setTimeout(() => {
+        let isAnswered = Math.random() < 0.5; // 50% 概率
+        if (isAnswered) {
+            status.innerText = "00:00";
+            callDuration = 0;
+            callInterval = setInterval(() => {
+                callDuration++;
+                let mins = String(Math.floor(callDuration / 60)).padStart(2, '0');
+                let secs = String(callDuration % 60).padStart(2, '0');
+                status.innerText = `${mins}:${secs}`;
+            }, 1000);
+        } else {
+            status.innerText = "对方无应答";
+            setTimeout(() => {
+                endVideoCall();
+            }, 1500);
+        }
+    }, 3000);
+}
+
+function endVideoCall() {
+    let modal = document.getElementById('callModal');
+    modal.classList.remove('show');
+    if (callTimer) clearTimeout(callTimer);
+    if (callInterval) clearInterval(callInterval);
+    callTimer = null;
+    callInterval = null;
+}
 
 function togglePanel(type) {
     let box = document.getElementById('panelBox');
     let plus = document.getElementById('plusPanel');
-    let emoji = document.getElementById('emojiPanel');
     if (currentActivePanel === type) {
         closeAllPanels();
     } else {
         box.classList.add('show');
-        if (type === 'plus') {
-            plus.style.display = 'flex'; emoji.style.display = 'none';
-        } else {
-            plus.style.display = 'none'; emoji.style.display = 'flex';
-        }
+        plus.style.display = 'flex';
         currentActivePanel = type;
         setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 150);
     }
@@ -629,11 +684,7 @@ function closeAllPanels() {
 }
 
 function handleInput(el) {
-    if(el.value.trim().length > 0) {
-        sendBtn.style.display = 'flex';
-    } else {
-        sendBtn.style.display = 'none';
-    }
+    sendBtn.style.display = (el.value.trim().length > 0) ? 'flex' : 'none';
 }
 
 function sendMe(){
@@ -657,15 +708,11 @@ function addMsg(side,text,isHtml=false){
     d.className="msg "+(side==="me"?"right":"");
 
     let contentHtml = (isHtml && text.indexOf('img') > -1) ? text : `<div class="bubble">${text}${tailSvg}</div>`;
-    
-    // 渲染未读单勾
     let statusHtml = (side === "me") ? `<span class="read-status unread" id="${uniqueStatusId}">✓</span>` : '';
 
     d.innerHTML=`
     <div class="msg-body">
-        <div class="bubble-container">
-            ${contentHtml}
-        </div>
+        <div class="bubble-container">${contentHtml}</div>
         ${statusHtml}
         <div class="msg-time">${timeStr}</div>
     </div>
@@ -674,13 +721,12 @@ function addMsg(side,text,isHtml=false){
     chat.scrollTop=chat.scrollHeight;
 
     if (side === "me") {
-        resetActiveMessageTimer();
         let randomDelay = Math.floor(Math.random() * 3 + 2) * 1000;
         setTimeout(function() {
             let statusEl = document.getElementById(uniqueStatusId);
             if (statusEl) {
                 statusEl.className = "read-status read";
-                statusEl.innerText = "✓✓"; // 转换为已读蓝色双勾
+                statusEl.innerText = "✓✓";
                 let target = chatHistory.find(h => h.statusId === uniqueStatusId);
                 if(target) target.status = '已读';
                 saveAll();
@@ -690,7 +736,6 @@ function addMsg(side,text,isHtml=false){
     }
 }
 
-/* 显示左侧三点浮动输入气泡 */
 function showTypingBubble() {
     if (typingBubbleElement) return;
     typingBubbleElement = document.createElement("div");
@@ -711,7 +756,6 @@ function showTypingBubble() {
     chat.scrollTop = chat.scrollHeight;
 }
 
-/* 隐藏输入气泡 */
 function hideTypingBubble() {
     if (typingBubbleElement) {
         chat.removeChild(typingBubbleElement);
@@ -755,12 +799,6 @@ function sendQueueItem(queue, index, delayTime) {
     }, delayTime);
 }
 
-function resetActiveMessageTimer() {
-    if (activeMsgTimer) clearTimeout(activeMsgTimer);
-    if (freqSettings.activeToggle === false) return;
-    activeMsgTimer = setTimeout(() => { triggerAdvancedAutoReply(); }, (freqSettings.activeMaxMin || 5) * 60 * 1000);
-}
-
 function openCards(){
     cardPage.classList.add('show');
     closeAllPanels();
@@ -779,7 +817,6 @@ function closeCards(){ cardPage.classList.remove('show'); }
 
 renderProfile();
 renderChatFromHistory();
-resetActiveMessageTimer();
 </script>
 </body>
 </html>
